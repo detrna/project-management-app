@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.rightSide {
+  padding-right: 30px;
+  display: flex;
+  gap: 2vw;
+  align-items: center;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+button {
+  background-color: transparent;
+
+  font-size: medium;
+  font-weight: 500;
+}
+
+i {
+  transform: scale(1.5);
+}
+
+p {
+  font-weight: 600;
+}
