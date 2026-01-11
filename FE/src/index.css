@@ -1,9 +1,11 @@
 * {
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-family: "Montserrat", sans-serif;
+  color: #ffffff;
 }
 
 body {
-  background-color: gray;
+  background-color: #353535;
+  margin: 0;
 }
 
 button {

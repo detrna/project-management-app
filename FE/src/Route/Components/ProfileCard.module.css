@@ -1,0 +1,36 @@
+* {
+  outline: solid transparent;
+}
+
+.container {
+  width: 300px;
+  height: 120px;
+  background-color: #3f3f3f;
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+  gap: 15px;
+  border-radius: 5px;
+}
+
+.nameContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#avatar {
+  height: 65px;
+  width: 65px;
+}
+
+#textName {
+  margin: 0;
+  font-size: large;
+}
+
+#textProject {
+  font-weight: 100;
+  font-size: 1rem;
+  margin: 0;
+}

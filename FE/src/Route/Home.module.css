@@ -1,0 +1,46 @@
+.container {
+  background-color: #282828;
+  margin-top: 30px;
+  margin-left: 30px;
+  margin-right: 30px;
+  height: auto;
+  border-radius: 5px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  padding-bottom: 40px;
+}
+
+.header {
+  display: flex;
+  margin-left: 40px;
+  gap: 20px;
+  align-items: center;
+}
+
+.userlist {
+  display: flex;
+
+  gap: 55px;
+
+  row-gap: 30px;
+  column-gap: 55px;
+
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+input {
+  border-radius: 5px;
+  height: 20px;
+  background-color: rgba(98, 98, 98, 0.25);
+  border: solid transparent;
+  padding-left: 10px;
+}
+
+#textUserlist {
+  font-weight: 800;
+  font-size: x-large;
+}
