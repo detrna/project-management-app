@@ -7,6 +7,7 @@ import Login from "./Route/Login";
 import Register from "./Route/Register";
 import Profile from "./Route/Profile";
 import Project from "./Route/Project";
+import ProjectForm from "./Route/ProjectForm";
 
 const router = createBrowserRouter([
   {
@@ -22,12 +23,18 @@ const router = createBrowserRouter([
     element: <Register></Register>,
   },
   {
-    path: "/profile/:id",
+    path: "/profile/",
     element: <Profile></Profile>,
   },
   {
-    path: "/project/:id",
+    path: "/project/",
     element: <Project></Project>,
+    children: [
+      {
+        path: "create",
+        element: <ProjectForm></ProjectForm>,
+      },
+    ],
   },
 ]);
 

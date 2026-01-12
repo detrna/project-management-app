@@ -7,21 +7,25 @@ export default function Navbar({ name }) {
 
   return (
     <div className={styles.container}>
-      <p className={styles.leftSide}>Project Management App</p>
+      <Link to={"/"} className={styles.link}>
+        <p id={styles.p} className={styles.leftSide}>
+          Project Management App
+        </p>
+      </Link>
       {!loggedIn ? (
         <div className={styles.rightSide}>
           <Link to={"/login"}>
-            <button>Login</button>
+            <button id={styles.button}>Login</button>
           </Link>
           <Link to={"/register"}>
-            <button>Register</button>
+            <button id={styles.button}>Register</button>
           </Link>
         </div>
       ) : (
         <div className={styles.rightSide}>
-          <p>{name}</p>
+          <p id={styles.p}>{name}</p>
 
-          <i class="fa-solid fa-user"></i>
+          <i class="fa-solid fa-user" id={styles.icon}></i>
         </div>
       )}
     </div>

@@ -13,19 +13,25 @@
   justify-content: flex-end;
 }
 
-button {
+#button {
   border-radius: 8px;
   background: rgba(98, 98, 98, 0.25);
   padding: 5px;
 
   font-size: medium;
   font-weight: 500;
+
+  cursor: pointer;
 }
 
-i {
+#i {
   transform: scale(1.5);
 }
 
-p {
+#p {
   font-weight: 400;
+}
+
+.link {
+  text-decoration: none;
 }

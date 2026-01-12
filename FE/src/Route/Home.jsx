@@ -9,7 +9,7 @@ export default function Home() {
       <div className={styles.container}>
         <div className={styles.header}>
           <p id={styles.textUserlist}>Userlist</p>
-          <input placeholder="search here ..."></input>
+          <input placeholder="search here ..." id={styles.input}></input>
         </div>
         <div className={styles.userlist}>
           <ProfileCard></ProfileCard>
