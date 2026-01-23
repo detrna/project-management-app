@@ -24,8 +24,9 @@
 .header {
   display: flex;
   align-items: center;
-
-  margin-left: 60px;
+  justify-content: space-between;
+  padding-left: 50px;
+  padding-right: 50px;
 }
 
 #textName {
@@ -40,7 +41,6 @@
 }
 
 .collaboratorContainer {
-  width: 850px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -53,10 +53,16 @@
   gap: 5px;
 }
 
-#avatar {
+#avatarCollaborator {
   margin: 0;
   height: 35px;
   width: 35px;
+}
+
+#avatar {
+  margin: 0;
+  height: 65px;
+  width: 65px;
 }
 
 #textCollaborator {
@@ -71,4 +77,14 @@
   gap: 30px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.link {
+  text-decoration: none;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }

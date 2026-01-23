@@ -1,12 +1,12 @@
 #avatar {
-  width: 50px;
+  width: 100px;
 }
 
 .container {
   background-color: #282828;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 60px;
   border: 10px;
 
   margin-left: 30px;
@@ -17,6 +17,12 @@
   padding-top: 40px;
   padding-right: 20px;
   padding-bottom: 40px;
+}
+
+.userCard {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .nameContainer {
@@ -30,17 +36,49 @@
   align-items: center;
   gap: 20px;
   margin-left: 60px;
+  justify-content: space-between;
+}
+
+.projectContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.projectHeader {
+  display: flex;
+  justify-content: space-between;
+}
+
+.projectTitle {
+  display: flex;
+  margin-left: 60px;
+  gap: 20px;
+  align-items: center;
+}
+
+#textProject {
+  margin: 0;
+  font-weight: normal;
+}
+
+#input {
+  margin: 0;
+  background-color: #181818;
+  border: transparent;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: large;
 }
 
 .newProjectContainer {
   display: flex;
-  margin-left: 720px;
-  margin-bottom: 30px;
+  margin-right: 60px;
 }
 
 #button {
   border-radius: 3px;
-  background: rgba(98, 98, 98, 0.25);
+  background: rgba(0, 0, 0, 0.25);
   padding: 5px;
 
   font-size: medium;
@@ -48,7 +86,6 @@
 
   cursor: pointer;
 }
-
 .projectList {
   display: flex;
   gap: 30px;
@@ -66,8 +103,18 @@
   font-size: x-large;
 }
 
-#textProject {
-  font-weight: 100;
+.followerContainer {
+  display: flex;
+  gap: 5px;
+}
+
+#textFollower {
+  font-weight: 200;
   font-size: large;
   margin: 0;
+}
+
+.link {
+  text-decoration: none;
+  display: inline-block;
 }

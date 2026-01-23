@@ -5,7 +5,7 @@ export default function TaskCard() {
     <div className={styles.container}>
       <div className={styles.nameContainer}>
         <icon id={styles.circle}></icon>
-        <p id={styles.textNama}>Racang UI/UX</p>
+        <p id={styles.textNama}>Rancang UI/UX</p>
         <p id={styles.pecahan}>3/3</p>
       </div>
       <div className={styles.milestoneList}>
