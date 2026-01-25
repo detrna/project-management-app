@@ -10,6 +10,7 @@ import "./index.css";
 import CreateProject from "./Route/CreateProject";
 import Follower from "./Route/Follower";
 import Collaborator from "./Route/Collaborator";
+import AuthProvider from "./AuthServices/AuthProvider";
 
 const router = createBrowserRouter([
   {
@@ -50,8 +51,23 @@ const router = createBrowserRouter([
   },
 ]);
 
+async function fetchUser() {
+  try {
+    const res = await fetch("http://localhost:3000/fetchUser");
+
+    if (!res.ok) throw new Error("Couldn't fetch responses");
+
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router}></RouterProvider>
+    <AuthProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </AuthProvider>
   </StrictMode>,
 );

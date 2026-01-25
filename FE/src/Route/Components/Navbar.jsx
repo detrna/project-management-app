@@ -1,9 +1,29 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Navbar.module.css";
+import { AuthContext } from "../../AuthServices/AuthProvider";
+import { useContext } from "react";
 
-export default function Navbar({ name }) {
-  const [loggedIn, setLoggedIn] = useState(false);
+export default function Navbar() {
+  const { user } = useContext(AuthContext);
+  async function log() {
+    console.log(user);
+
+    /*
+    try {
+      const res = await fetch("http://localhost:3000/log", {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("error");
+
+      const data = await res.json();
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
+      */
+  }
 
   return (
     <div className={styles.container}>
@@ -12,8 +32,12 @@ export default function Navbar({ name }) {
           Project Management App
         </p>
       </Link>
-      {!loggedIn ? (
+      <button id={styles.button} onClick={log}></button>
+      {!user ? (
         <div className={styles.rightSide}>
+          <button id={styles.button} onClick={log}>
+            Log
+          </button>
           <Link to={"/login"}>
             <button id={styles.button}>Login</button>
           </Link>
@@ -23,7 +47,7 @@ export default function Navbar({ name }) {
         </div>
       ) : (
         <div className={styles.rightSide}>
-          <p id={styles.p}>{name}</p>
+          <p id={styles.p}>{user.name}</p>
 
           <i class="fa-solid fa-user" id={styles.icon}></i>
         </div>
