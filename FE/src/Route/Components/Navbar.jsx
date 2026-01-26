@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import { AuthContext } from "../../AuthServices/AuthProvider";
 import { useContext } from "react";
+import ProfileMenu from "./ProfileMenu";
 
 export default function Navbar() {
-  const { user } = useContext(AuthContext);
+  const navigate = useNavigate()
+  const { user, logOut } = useContext(AuthContext);
+  const [profileMenu, setProfileMenu] = useState(false)
+
   async function log() {
     console.log(user);
 
@@ -22,10 +26,26 @@ export default function Navbar() {
     } catch (err) {
       console.log(err);
     }
-      */
+    */
   }
 
+  function handleProfileButton(){
+    console.log("test")
+    if(profileMenu){
+      setProfileMenu(false)
+    } else {
+      setProfileMenu(true)
+    }
+  }
+  
+      function handleLogout(){
+          logOut()
+          setProfileMenu(false)
+          navigate("/")
+      }
+
   return (
+    <>
     <div className={styles.container}>
       <Link to={"/"} className={styles.link}>
         <p id={styles.p} className={styles.leftSide}>
@@ -35,9 +55,6 @@ export default function Navbar() {
       <button id={styles.button} onClick={log}></button>
       {!user ? (
         <div className={styles.rightSide}>
-          <button id={styles.button} onClick={log}>
-            Log
-          </button>
           <Link to={"/login"}>
             <button id={styles.button}>Login</button>
           </Link>
@@ -49,9 +66,15 @@ export default function Navbar() {
         <div className={styles.rightSide}>
           <p id={styles.p}>{user.name}</p>
 
-          <i class="fa-solid fa-user" id={styles.icon}></i>
+          <i onClick={handleProfileButton} className="fa-solid fa-user" id={styles.icon}></i>
         </div>
       )}
     </div>
+    {profileMenu && 
+      <div className={styles.profileMenuContainer}>
+        <ProfileMenu handleLogoutButton={handleLogout}></ProfileMenu>
+      </div>
+    }
+    </>
   );
 }

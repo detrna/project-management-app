@@ -26,18 +26,13 @@ app.post("/register", async (req, res) => {
   const dateCreated = new Date().toLocaleDateString("en-CA");
 
   const sql =
-    "INSERT INTO user (name, password, pfp, project_count, follower_count, following_count, date_created, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO user (name, password, date_created) VALUES (?, ?, ?)";
   db.query(
     sql,
     [
       name,
       hashedPassword,
-      "default",
-      "./img/avatar",
-      "0",
-      "0",
       dateCreated,
-      "default",
     ],
     (err, fields) => {
       if (err) {
@@ -92,8 +87,9 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", (req, res) => {
   const { name, password } = req.body;
+  console.log(name, password)
 
-  const sql = "SELECT (id, name, password, role) FROM user WHERE name = ?";
+  const sql = "SELECT id, name, password, role FROM user WHERE name = ?";
 
   db.query(sql, [name], async (err, rows, fields) => {
     if (err) {
@@ -105,8 +101,9 @@ app.post("/login", (req, res) => {
 
     const hashedPassword = rows[0].password;
 
-    const isMatch = await bcrypt.compare(hashedPassword, password);
+    const isMatch = await bcrypt.compare(password, hashedPassword);
     if (!isMatch) return res.sendStatus(401);
+    console.log("ismatch:", isMatch)
 
     const refreshToken = jwt.sign(
       {
@@ -114,7 +111,7 @@ app.post("/login", (req, res) => {
         name: name,
         role: rows[0].role,
       },
-      process.dotenv.JWT_REFRESH_KEY,
+      process.env.JWT_REFRESH_KEY,
       { expiresIn: refreshTokenExpiry },
     );
     const accessToken = jwt.sign(
@@ -123,7 +120,7 @@ app.post("/login", (req, res) => {
         name: name,
         role: rows[0].role,
       },
-      process.dotenv.JWT_ACCESS_KEY,
+      process.env.JWT_ACCESS_KEY,
       { expiresIn: accessTokenExpiry },
     );
 
@@ -137,12 +134,34 @@ app.post("/login", (req, res) => {
       sameSite: "lax",
       secure: false,
     });
+    
+    const user = { id: rows[0].id, name: name, role: rows[0].role };
+        res.json(user);
   });
 });
 
+app.delete("/logout", (req, res) => {
+  const accessToken = req.cookies.access_token
+  const refreshToken = req.cookies.refresh_token
+
+  res.clearCookie("access_token", accessToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+  });
+  res.clearCookie("refresh_token", refreshToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+  });
+  res.send({message: "Successfully logged out"})
+})
+
 app.get("/fetchProfile", authenticate, (req, res) => {
   const user = req.user;
+  console.log("fetched")
   res.json(user);
+  console.log(user)
 });
 
 app.post("/refresh", (req, res) => {
@@ -159,7 +178,7 @@ app.post("/refresh", (req, res) => {
         name: user.name,
         role: user.role,
       },
-      process.dotenv.JWT_REFRESH_KEY,
+      process.env.JWT_REFRESH_KEY,
       { expiresIn: refreshTokenExpiry },
     );
     const accessToken = jwt.sign(
@@ -168,7 +187,7 @@ app.post("/refresh", (req, res) => {
         name: user.name,
         role: user.role,
       },
-      process.dotenv.JWT_ACCESS_KEY,
+      process.env.JWT_ACCESS_KEY,
       { expiresIn: accessTokenExpiry },
     );
 

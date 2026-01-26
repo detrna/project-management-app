@@ -24,8 +24,9 @@
   cursor: pointer;
 }
 
-#i {
-  transform: scale(1.5);
+#icon {
+  transform: scale(1.25);
+  cursor: pointer;
 }
 
 #p {
@@ -34,4 +35,9 @@
 
 .link {
   text-decoration: none;
+}
+
+.profileMenuContainer {
+  position:absolute;
+  right:0px;
 }

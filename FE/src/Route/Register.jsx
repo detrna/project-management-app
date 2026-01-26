@@ -4,13 +4,17 @@ import styles from "./Register.module.css";
 import { useContext } from "react";
 import { AuthContext } from "../AuthServices/AuthProvider";
 
+import { useNavigate } from "react-router-dom";
+
 export default function Register() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [notMatch, setNotMatch] = useState(false);
 
-  const { registerUser } = useContext(AuthContext);
+  const { registerUser, user } = useContext(AuthContext);
+
+  const navigate = useNavigate()
 
   function verification() {
     if (password !== confirmPassword) {
@@ -29,6 +33,11 @@ export default function Register() {
       name: name,
       password: password,
     });
+    navigate("/")
+  }
+
+  if(user){
+    navigate("/")
   }
 
   return (
