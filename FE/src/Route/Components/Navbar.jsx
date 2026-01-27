@@ -52,7 +52,6 @@ export default function Navbar() {
           Project Management App
         </p>
       </Link>
-      <button id={styles.button} onClick={log}></button>
       {!user ? (
         <div className={styles.rightSide}>
           <Link to={"/login"}>

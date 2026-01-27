@@ -206,6 +206,38 @@ app.post("/refresh", (req, res) => {
   }
 });
 
+app.get("/fetchProfileHome", (req, res) => {
+  const sql = "SELECT id, name, project_count FROM user"
+
+  db.query(sql, [], (err, rows, fields) => {
+    if(err) return console.log(err)
+      res.send(rows)
+  })
+})
+
+app.get("/searchProfile/:name", (req, res) => {
+  const name = req.params.name
+  console.log(name)
+
+  const sql = "SELECT id, name, project_count FROM user WHERE name LIKE ?"
+  db.query(sql, [`%${name}%`], (err, rows, fields) => {
+    if(err) return console.log(err)
+    console.log(rows)
+    res.send(rows)
+  })
+})
+
+app.get("/fetchProfile/:id", (req, res) => {
+  const id = req.params.id
+  console.log("/fetchProfile hit, id:", id)
+
+  const sql = "SELECT id, name, project_count, follower_count, following_count FROM user WHERE id = ?"
+  db.query(sql, [id], (err, rows, fields) => {
+    if(err) return console.log(err)
+    res.send(rows[0])
+  })
+})
+
 app.delete("/log", (req, res) => {
   const accessToken = req.cookies.access_token;
   const refreshToken = req.cookies.access_token;
