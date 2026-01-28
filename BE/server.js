@@ -27,67 +27,58 @@ app.post("/register", async (req, res) => {
 
   const sql =
     "INSERT INTO user (name, password, date_created) VALUES (?, ?, ?)";
-  db.query(
-    sql,
-    [
-      name,
-      hashedPassword,
-      dateCreated,
-    ],
-    (err, fields) => {
+  db.query(sql, [name, hashedPassword, dateCreated], (err, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    const sqlSelect = "SELECT * FROM user WHERE name = ?";
+
+    db.query(sqlSelect, [name], (err, rows, fields) => {
       if (err) {
         console.log(err);
         return res.sendStatus(500);
       }
+      const refreshToken = jwt.sign(
+        {
+          id: rows[0].id,
+          name: name,
+          role: rows[0].role,
+        },
+        process.env.JWT_REFRESH_KEY,
+        { expiresIn: refreshTokenExpiry },
+      );
+      const accessToken = jwt.sign(
+        {
+          id: rows[0].id,
+          name: name,
+          role: rows[0].role,
+        },
+        process.env.JWT_ACCESS_KEY,
+        { expiresIn: accessTokenExpiry },
+      );
 
-      const sqlSelect = "SELECT * FROM user WHERE name = ?";
-
-      db.query(sqlSelect, [name], (err, rows, fields) => {
-        if (err) {
-          console.log(err);
-          return res.sendStatus(500);
-        }
-        const refreshToken = jwt.sign(
-          {
-            id: rows[0].id,
-            name: name,
-            role: rows[0].role,
-          },
-          process.env.JWT_REFRESH_KEY,
-          { expiresIn: refreshTokenExpiry },
-        );
-        const accessToken = jwt.sign(
-          {
-            id: rows[0].id,
-            name: name,
-            role: rows[0].role,
-          },
-          process.env.JWT_ACCESS_KEY,
-          { expiresIn: accessTokenExpiry },
-        );
-
-        res.cookie("access_token", accessToken, {
-          httpOnly: true,
-          sameSite: "lax",
-          secure: false,
-        });
-
-        res.cookie("refresh_token", refreshToken, {
-          httpOnly: true,
-          sameSite: "lax",
-          secure: false,
-        });
-
-        const user = { id: rows[0].id, name: name, role: rows[0].role };
-        res.json(user);
+      res.cookie("access_token", accessToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
       });
-    },
-  );
+
+      res.cookie("refresh_token", refreshToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      });
+
+      const user = { id: rows[0].id, name: name, role: rows[0].role };
+      res.json(user);
+    });
+  });
 });
 
 app.post("/login", (req, res) => {
   const { name, password } = req.body;
-  console.log(name, password)
 
   const sql = "SELECT id, name, password, role FROM user WHERE name = ?";
 
@@ -103,7 +94,6 @@ app.post("/login", (req, res) => {
 
     const isMatch = await bcrypt.compare(password, hashedPassword);
     if (!isMatch) return res.sendStatus(401);
-    console.log("ismatch:", isMatch)
 
     const refreshToken = jwt.sign(
       {
@@ -134,15 +124,15 @@ app.post("/login", (req, res) => {
       sameSite: "lax",
       secure: false,
     });
-    
+
     const user = { id: rows[0].id, name: name, role: rows[0].role };
-        res.json(user);
+    res.json(user);
   });
 });
 
 app.delete("/logout", (req, res) => {
-  const accessToken = req.cookies.access_token
-  const refreshToken = req.cookies.refresh_token
+  const accessToken = req.cookies.access_token;
+  const refreshToken = req.cookies.refresh_token;
 
   res.clearCookie("access_token", accessToken, {
     httpOnly: true,
@@ -154,14 +144,12 @@ app.delete("/logout", (req, res) => {
     sameSite: "lax",
     secure: false,
   });
-  res.send({message: "Successfully logged out"})
-})
+  res.send({ message: "Successfully logged out" });
+});
 
 app.get("/fetchProfile", authenticate, (req, res) => {
   const user = req.user;
-  console.log("fetched")
-  res.json(user);
-  console.log(user)
+  res.json({ id: user.id, name: user.name, role: user.role });
 });
 
 app.post("/refresh", (req, res) => {
@@ -207,36 +195,116 @@ app.post("/refresh", (req, res) => {
 });
 
 app.get("/fetchProfileHome", (req, res) => {
-  const sql = "SELECT id, name, project_count FROM user"
+  const sql = "SELECT id, name, project_count FROM user";
 
   db.query(sql, [], (err, rows, fields) => {
-    if(err) return console.log(err)
-      res.send(rows)
-  })
-})
+    if (err) return console.log(err);
+    res.send(rows);
+  });
+});
 
 app.get("/searchProfile/:name", (req, res) => {
-  const name = req.params.name
-  console.log(name)
+  const name = req.params.name;
 
-  const sql = "SELECT id, name, project_count FROM user WHERE name LIKE ?"
+  const sql = "SELECT id, name, project_count FROM user WHERE name LIKE ?";
   db.query(sql, [`%${name}%`], (err, rows, fields) => {
-    if(err) return console.log(err)
-    console.log(rows)
-    res.send(rows)
-  })
-})
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+    console.log(rows);
+    res.send(rows);
+  });
+});
 
 app.get("/fetchProfile/:id", (req, res) => {
-  const id = req.params.id
-  console.log("/fetchProfile hit, id:", id)
+  const id = req.params.id;
 
-  const sql = "SELECT id, name, project_count, follower_count, following_count FROM user WHERE id = ?"
+  const sql =
+    "SELECT id, name, project_count, follower_count, following_count FROM user WHERE id = ?";
   db.query(sql, [id], (err, rows, fields) => {
-    if(err) return console.log(err)
-    res.send(rows[0])
-  })
-})
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+    res.send(rows[0]);
+  });
+});
+
+app.post("/submitProject", authenticate, (req, res) => {
+  const user = req.user;
+  const { name, tasks } = req.body;
+
+  const dateCreated = new Date().toLocaleDateString("en-CA");
+
+  const projectQuery =
+    "INSERT INTO project (name, task_count, user_id) VALUES (?, ?, ?)";
+
+  let completedQuery = 0;
+
+  db.query(projectQuery, [name, tasks.length, user.id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+    const newProjectId = result.insertId;
+
+    tasks.forEach((task) => {
+      const taskQuery =
+        "INSERT INTO task (name, milestone_count, project_id) VALUES (?, ?, ?)";
+
+      db.query(
+        taskQuery,
+        [task.name, task.milestones.length, newProjectId],
+        (err, tResult) => {
+          if (err) {
+            console.log(err);
+            return res.sendStatus(500);
+          }
+
+          const newTaskId = tResult.insertId;
+
+          const milestonePayload = task.milestones.map((milestone) => [
+            milestone,
+            newTaskId,
+          ]);
+
+          const milestoneQuery =
+            "INSERT INTO milestone (name, task_id) VALUES ?";
+
+          db.query(milestoneQuery, [milestonePayload], (err, mResult) => {
+            if (err) {
+              console.log(err);
+              return res.sendStatus(500);
+            }
+            completedQuery++;
+            if (completedQuery === tasks.length) {
+              res.json({ message: "Data inserted successfully" });
+            }
+          });
+        },
+      );
+    });
+  });
+});
+
+function authenticate(req, res, next) {
+  const accessToken = req.cookies.access_token;
+
+  if (!accessToken) {
+    return res.sendStatus(401);
+  }
+
+  try {
+    const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_KEY);
+
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.sendStatus(403);
+  }
+}
 
 app.delete("/log", (req, res) => {
   const accessToken = req.cookies.access_token;
@@ -253,27 +321,6 @@ app.delete("/log", (req, res) => {
     secure: false,
   });
 });
-
-function authenticate(req, res, next) {
-  const accessToken = req.cookies.access_token;
-  console.log(accessToken);
-
-  if (!accessToken) {
-    return res.sendStatus(401);
-  }
-
-  try {
-    console.log("decoding");
-    const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_KEY);
-
-    console.log("verified");
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.log(err);
-    return res.sendStatus(403);
-  }
-}
 
 app.listen(3000, () => {
   console.log("http://localhost:3000");

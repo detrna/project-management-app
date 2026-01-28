@@ -40,36 +40,35 @@ export default function AuthProvider({ children }) {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Couldn't fetch responses");
-      if(res.statusCode === 401) return false;
+      if (res.statusCode === 401) return false;
       const data = await res.json();
       setUser({ id: data.id, name: data.name, role: data.role });
       console.log(data);
       return true;
     } catch (err) {
-      
       console.log(err);
       return false;
     }
   }
 
-  async function logOut(){
-    try{
-      const res = await authFetch("/logout", "DELETE")
+  async function logOut() {
+    try {
+      const res = await authFetch("/logout", "DELETE");
 
-      if(!res.ok) throw new Error("Coudln't fetch from /logout")
+      if (!res.ok) throw new Error("Coudln't fetch from /logout");
 
-      const data = await res.json()
-      setUser(null)
-      console.log(data)
-    } catch(err){
-      console.log(err)
+      const data = await res.json();
+      setUser(null);
+      console.log(data);
+    } catch (err) {
+      console.log(err);
     }
   }
 
   async function fetchUser() {
     try {
       const res = await authFetch("/fetchProfile", "GET");
-      console.log("auth fetched /fetchProile")
+      console.log("auth fetched /fetchProile");
 
       if (!res.ok) throw new Error("Couldn't fetch responses");
 
@@ -85,33 +84,29 @@ export default function AuthProvider({ children }) {
     fetchUser();
   }, []);
 
-  async function authFetch(endpoint, method) {
+  async function authFetch(endpoint, method, payload) {
     try {
       const res = await fetch(`http://localhost:3000${endpoint}`, {
         method: method,
         credentials: "include",
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        return res;
-      }
-
-      if(res.statusCode !== 401 || 403) return res;
+      if (res.statusCode !== 403) return res;
 
       const refresh = await fetch("http://localhost:3000/refresh", {
-          method: "POST",
-          credentials: "include",
-        });
+        method: "POST",
+        credentials: "include",
+      });
 
-        if (!refresh.ok) {
-          throw new Error("Couldn't fetch from refresh");
-        }
-       
-          return fetch(`http://localhost:3000${endpoint}`, {
-            method: method,
-            credentials: "include",
-          });
+      if (!refresh.ok) {
+        throw new Error("Couldn't fetch from /refresh");
+      }
 
+      return fetch(`http://localhost:3000${endpoint}`, {
+        method: method,
+        credentials: "include",
+      });
     } catch (err) {
       console.log(err);
     }

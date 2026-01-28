@@ -6,9 +6,9 @@ import { useContext } from "react";
 import ProfileMenu from "./ProfileMenu";
 
 export default function Navbar() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { user, logOut } = useContext(AuthContext);
-  const [profileMenu, setProfileMenu] = useState(false)
+  const [profileMenu, setProfileMenu] = useState(false);
 
   async function log() {
     console.log(user);
@@ -29,51 +29,61 @@ export default function Navbar() {
     */
   }
 
-  function handleProfileButton(){
-    console.log("test")
-    if(profileMenu){
-      setProfileMenu(false)
+  function handleIconButton() {
+    if (profileMenu) {
+      setProfileMenu(false);
     } else {
-      setProfileMenu(true)
+      setProfileMenu(true);
     }
   }
-  
-      function handleLogout(){
-          logOut()
-          setProfileMenu(false)
-          navigate("/")
-      }
+
+  function handleLogout() {
+    logOut();
+    setProfileMenu(false);
+    navigate("/");
+  }
+
+  function handleProfile() {
+    navigate(`/profile/${user.id}`);
+  }
 
   return (
     <>
-    <div className={styles.container}>
-      <Link to={"/"} className={styles.link}>
-        <p id={styles.p} className={styles.leftSide}>
-          Project Management App
-        </p>
-      </Link>
-      {!user ? (
-        <div className={styles.rightSide}>
-          <Link to={"/login"}>
-            <button id={styles.button}>Login</button>
-          </Link>
-          <Link to={"/register"}>
-            <button id={styles.button}>Register</button>
-          </Link>
-        </div>
-      ) : (
-        <div className={styles.rightSide}>
-          <p id={styles.p}>{user.name}</p>
+      <div className={styles.container}>
+        <Link to={"/"} className={styles.link}>
+          <p id={styles.p} className={styles.leftSide}>
+            Project Management App
+          </p>
+        </Link>
+        {!user ? (
+          <div className={styles.rightSide}>
+            <Link to={"/login"}>
+              <button id={styles.button}>Login</button>
+            </Link>
+            <Link to={"/register"}>
+              <button id={styles.button}>Register</button>
+            </Link>
+          </div>
+        ) : (
+          <div className={styles.rightSide}>
+            <p id={styles.p}>{user.name}</p>
 
-          <i onClick={handleProfileButton} className="fa-solid fa-user" id={styles.icon}></i>
+            <i
+              onClick={handleIconButton}
+              className="fa-solid fa-user"
+              id={styles.icon}
+            ></i>
+          </div>
+        )}
+      </div>
+      {profileMenu && (
+        <div className={styles.profileMenuContainer}>
+          <ProfileMenu
+            handleProfileButton={handleProfile}
+            handleLogoutButton={handleLogout}
+          ></ProfileMenu>
         </div>
       )}
-    </div>
-    {profileMenu && 
-      <div className={styles.profileMenuContainer}>
-        <ProfileMenu handleLogoutButton={handleLogout}></ProfileMenu>
-      </div>
-    }
     </>
   );
 }

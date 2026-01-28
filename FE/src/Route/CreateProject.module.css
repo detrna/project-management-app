@@ -53,6 +53,18 @@
   font-weight: 300;
 }
 
+.milestoneInput {
+  width: 33vw;
+
+  background-color: #414141;
+  border: transparent;
+  padding: 9px;
+  border-radius: 5px;
+  font-size: larger;
+  font-weight: lighter;
+  font-weight: 300;
+}
+
 .taskContainer {
   display: flex;
   align-items: center;
@@ -68,6 +80,22 @@
   font-size: larger;
 }
 
+.milestoneContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deleteButton {
+  width: 4vw;
+  height: 6vh;
+  background-color: rgba(0, 0, 0, 0.25);
+  font-weight: 500;
+  font-size: larger;
+  cursor: pointer;
+}
+
 #addMilestone {
+  width: 13vw;
   margin: auto;
 }
