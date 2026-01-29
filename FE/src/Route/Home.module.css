@@ -22,16 +22,9 @@
 
 .userlist {
   display: flex;
-
   gap: 55px;
-
-  /*
-  row-gap: 30px;
-  column-gap: 55px;
-  */
-
+  padding-left: 80px;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 #input {

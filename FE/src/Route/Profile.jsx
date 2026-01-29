@@ -133,7 +133,6 @@ export default function Profile() {
             <ProjectCard></ProjectCard>
             <ProjectCard></ProjectCard>
             <ProjectCard></ProjectCard>
-            <ProjectCard></ProjectCard>
           </div>
         </div>
       </div>
