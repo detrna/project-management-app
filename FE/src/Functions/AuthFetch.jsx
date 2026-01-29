@@ -6,10 +6,12 @@ export async function authFetch(endpoint, method, payload) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: payload ? JSON.stringify(payload) : undefined,
     });
 
-    if (res.statusCode !== 403) return res;
+    if (res.status !== 403) return res;
+
+    console.log("WERE REFRESHING");
 
     const refresh = await fetch("http://localhost:3000/refresh", {
       method: "POST",

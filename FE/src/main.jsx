@@ -38,7 +38,7 @@ const router = createBrowserRouter([
     element: <CreateProject></CreateProject>,
   },
   {
-    path: "/follower",
+    path: "/follower/:id",
     element: <Follower></Follower>,
   },
   {

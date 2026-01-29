@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import { createContext } from "react";
+import { authFetch } from "../Functions/AuthFetch";
 export const AuthContext = createContext();
 
 export default function AuthProvider({ children }) {
@@ -21,7 +22,6 @@ export default function AuthProvider({ children }) {
       if (!res.ok) throw new Error("Couldn't fetch responses");
       const data = await res.json();
       setUser({ id: data.id, name: data.name, role: data.role });
-      console.log(data);
     } catch (err) {
       console.log(err);
     }
@@ -43,7 +43,6 @@ export default function AuthProvider({ children }) {
       if (res.statusCode === 401) return false;
       const data = await res.json();
       setUser({ id: data.id, name: data.name, role: data.role });
-      console.log(data);
       return true;
     } catch (err) {
       console.log(err);
@@ -59,7 +58,6 @@ export default function AuthProvider({ children }) {
 
       const data = await res.json();
       setUser(null);
-      console.log(data);
     } catch (err) {
       console.log(err);
     }
@@ -68,12 +66,10 @@ export default function AuthProvider({ children }) {
   async function fetchUser() {
     try {
       const res = await authFetch("/fetchProfile", "GET");
-      console.log("auth fetched /fetchProile");
 
       if (!res.ok) throw new Error("Couldn't fetch responses");
 
       const data = await res.json();
-      console.log(data);
       setUser(data);
     } catch (err) {
       console.log(err);
@@ -83,34 +79,6 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     fetchUser();
   }, []);
-
-  async function authFetch(endpoint, method, payload) {
-    try {
-      const res = await fetch(`http://localhost:3000${endpoint}`, {
-        method: method,
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      if (res.statusCode !== 403) return res;
-
-      const refresh = await fetch("http://localhost:3000/refresh", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!refresh.ok) {
-        throw new Error("Couldn't fetch from /refresh");
-      }
-
-      return fetch(`http://localhost:3000${endpoint}`, {
-        method: method,
-        credentials: "include",
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  }
 
   return (
     <AuthContext.Provider value={{ user, registerUser, loginUser, logOut }}>

@@ -9,7 +9,7 @@ const db = require("./db.js");
 
 dotenv.config();
 const accessTokenExpiry = "5m";
-const refreshTokenExpiry = "5m";
+const refreshTokenExpiry = "1h";
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
@@ -153,14 +153,16 @@ app.get("/fetchProfile", authenticate, (req, res) => {
 });
 
 app.post("/refresh", (req, res) => {
+  console.log("refresh hit");
   const refreshToken = req.cookies.refresh_token;
+  console.log(refreshToken);
 
   if (!refreshToken) return res.sendStatus(401);
 
   try {
     const user = jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY);
 
-    const refreshToken = jwt.sign(
+    const newRefreshToken = jwt.sign(
       {
         id: user.id,
         name: user.name,
@@ -179,7 +181,7 @@ app.post("/refresh", (req, res) => {
       { expiresIn: accessTokenExpiry },
     );
 
-    res.cookie("refresh_token", refreshToken, {
+    res.cookie("refresh_token", newRefreshToken, {
       httpOnly: true,
       sameSite: "lax",
       secure: false,
@@ -189,6 +191,8 @@ app.post("/refresh", (req, res) => {
       sameSite: "lax",
       secure: false,
     });
+
+    res.send({ message: "refreshed token successfully" });
   } catch {
     return res.sendStatus(403);
   }
@@ -221,7 +225,7 @@ app.get("/fetchProfile/:id", (req, res) => {
   const id = req.params.id;
 
   const sql =
-    "SELECT id, name, project_count, follower_count, following_count FROM user WHERE id = ?";
+    "SELECT id, name, project_count, follower_count, following_count, pfp FROM user WHERE id = ?";
   db.query(sql, [id], (err, rows, fields) => {
     if (err) {
       console.log(err);
@@ -285,6 +289,119 @@ app.post("/submitProject", authenticate, (req, res) => {
         },
       );
     });
+  });
+});
+
+app.post("/follow/:id", authenticate, (req, res) => {
+  const user = req.user;
+  const { id } = req.params;
+
+  const sql = "INSERT INTO follower (user_id, follower_id) VALUES (?, ?)";
+  const follower_count_sql =
+    "UPDATE user SET follower_count = follower_count + 1 WHERE id = ?";
+
+  const following_count_sql =
+    "UPDATE user SET following_count = following_count + 1 WHERE id = ?";
+
+  db.query(sql, [id, user.id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    db.query(follower_count_sql, [id], (err, fResult) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+
+      db.query(following_count_sql, [user.id], (err, fResult) => {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        }
+
+        res.send({ message: "Account followed successfully" });
+      });
+    });
+  });
+});
+
+app.delete("/unfollow/:id", authenticate, (req, res) => {
+  const user = req.user;
+  const { id } = req.params;
+
+  const sql = "DELETE FROM follower WHERE follower_id = ? AND user_id = ?";
+  const follower_count_sql =
+    "UPDATE user SET follower_count = follower_count - 1 WHERE id = ?";
+  const following_count_sql =
+    "UPDATE user SET following_count = following_count - 1 WHERE id = ?";
+
+  db.query(sql, [user.id, id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    db.query(follower_count_sql, [id], (err, fResult) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+      db.query(following_count_sql, [user.id], (err, fgResult) => {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        }
+
+        res.send({ message: "Account unfollowed successfully" });
+      });
+    });
+  });
+});
+
+app.get("/follower/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = "SELECT follower_id FROM follower WHERE user_id = ?";
+
+  db.query(sql, [id], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
+  });
+});
+
+app.get("/following/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = "SELECT user_id FROM follower WHERE follower_id = ?";
+
+  db.query(sql, [id], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+    res.send(rows);
+  });
+});
+
+app.get("/followerName/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql =
+    "SELECT user.id, user.name, user.pfp FROM user INNER JOIN follower ON user.id = follower.follower_id WHERE follower.user_id = ?";
+
+  db.query(sql, [id], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
   });
 });
 

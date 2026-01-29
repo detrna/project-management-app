@@ -31,32 +31,6 @@
   gap: 10px;
 }
 
-.followerCard {
-  display: flex;
-  align-items: center;
-  background-color: #2f2f2f;
-  justify-content: space-between;
-
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-.credentials {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#avatar {
-  width: 40px;
-  height: 40px;
-}
-
-.link {
-  text-decoration: none;
-  display: inline;
-}
-
 #backButton {
   background-color: rgba(0, 0, 0, 0.25);
   width: 8vw;
@@ -64,15 +38,6 @@
 
   font-weight: 500;
   font-size: large;
-}
-
-#followButton {
-  background-color: rgba(0, 0, 0, 0.25);
-  width: 6vw;
-  cursor: pointer;
-
-  font-weight: 300;
-  font-size: medium;
 }
 
 .button {
