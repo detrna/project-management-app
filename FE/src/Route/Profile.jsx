@@ -17,14 +17,13 @@ export default function Profile() {
   const [isOwner, setIsOwner] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
   const [follower, setFollower] = useState(0);
+  const [projects, setProjects] = useState(null);
 
   async function fetchFollowerProfile() {
     try {
       const res = await fetch(`http://localhost:3000/follower/${id}`);
       if (!res.ok) throw new Error("Couldn't get responses");
       const data = await res.json();
-
-      console.log(user.id, data);
 
       for (let i = 0; i < data.length; i++) {
         if (user.id === data[i].follower_id) {
@@ -41,9 +40,12 @@ export default function Profile() {
 
   useEffect(
     () => async () => {
-      const data = await fetchProfile(id);
-      setProfile(data);
-      setFollower(data.follower_count);
+      const profile = await fetchProfile(id);
+      setProfile(profile);
+      setFollower(profile.follower_count);
+
+      const project = await fetchProjectList();
+      setProjects(project);
     },
     [],
   );
@@ -78,6 +80,35 @@ export default function Profile() {
     return true;
   }
 
+  async function fetchProjectList() {
+    try {
+      const res = await fetch(`http://localhost:3000/fetchProjectList/${id}`);
+      if (!res.ok) throw new Error("Couldn't get responses");
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async function searchProject(event) {
+    if (event.target.value === "") {
+      setProjects(await fetchProjectList());
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/searchProject/${event.target.value}`,
+      );
+      if (!res.ok) throw new Error("Couldn't get responses");
+      const data = await res.json();
+      setProjects(data);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   const FollowButton = () => {
     if (isOwner || !user) return null;
 
@@ -88,7 +119,7 @@ export default function Profile() {
     );
   };
 
-  if (!profile) return <></>;
+  if (!profile || !projects) return <></>;
 
   return (
     <>
@@ -118,7 +149,11 @@ export default function Profile() {
           <div className={styles.projectHeader}>
             <div className={styles.projectTitle}>
               <h2 id={styles.textProject}>{profile.project_count} Projects</h2>
-              <input id={styles.input} placeholder="search here..."></input>
+              <input
+                id={styles.input}
+                placeholder="search here..."
+                onChange={(e) => searchProject(e)}
+              ></input>
             </div>
             {isOwner && (
               <div className={styles.newProjectContainer}>
@@ -130,9 +165,15 @@ export default function Profile() {
           </div>
 
           <div className={styles.projectList}>
-            <ProjectCard></ProjectCard>
-            <ProjectCard></ProjectCard>
-            <ProjectCard></ProjectCard>
+            {projects.map((p) => (
+              <ProjectCard
+                key={p.id}
+                projectName={p.name}
+                projectLink={`/project/${p.id}`}
+                projectStatus={p.status}
+                projectCompletion={p.completion}
+              ></ProjectCard>
+            ))}
           </div>
         </div>
       </div>

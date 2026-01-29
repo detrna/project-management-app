@@ -243,52 +243,91 @@ app.post("/submitProject", authenticate, (req, res) => {
 
   const projectQuery =
     "INSERT INTO project (name, task_count, user_id) VALUES (?, ?, ?)";
+  const projectCountQuery =
+    "UPDATE user SET project_count = project_count WHERE id = ?";
 
   let completedQuery = 0;
 
-  db.query(projectQuery, [name, tasks.length, user.id], (err, result) => {
+  db.query(projectCountQuery, [user.id], (err, pResult) => {
     if (err) {
       console.log(err);
       return res.sendStatus(500);
     }
-    const newProjectId = result.insertId;
 
-    tasks.forEach((task) => {
-      const taskQuery =
-        "INSERT INTO task (name, milestone_count, project_id) VALUES (?, ?, ?)";
+    db.query(projectQuery, [name, tasks.length, user.id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+      const newProjectId = result.insertId;
 
-      db.query(
-        taskQuery,
-        [task.name, task.milestones.length, newProjectId],
-        (err, tResult) => {
-          if (err) {
-            console.log(err);
-            return res.sendStatus(500);
-          }
+      tasks.forEach((task) => {
+        const taskQuery =
+          "INSERT INTO task (name, milestone_count, project_id) VALUES (?, ?, ?)";
 
-          const newTaskId = tResult.insertId;
-
-          const milestonePayload = task.milestones.map((milestone) => [
-            milestone,
-            newTaskId,
-          ]);
-
-          const milestoneQuery =
-            "INSERT INTO milestone (name, task_id) VALUES ?";
-
-          db.query(milestoneQuery, [milestonePayload], (err, mResult) => {
+        db.query(
+          taskQuery,
+          [task.name, task.milestones.length, newProjectId],
+          (err, tResult) => {
             if (err) {
               console.log(err);
               return res.sendStatus(500);
             }
-            completedQuery++;
-            if (completedQuery === tasks.length) {
-              res.json({ message: "Data inserted successfully" });
-            }
-          });
-        },
-      );
+
+            const newTaskId = tResult.insertId;
+
+            const milestonePayload = task.milestones.map((milestone) => [
+              milestone,
+              newTaskId,
+            ]);
+
+            const milestoneQuery =
+              "INSERT INTO milestone (name, task_id) VALUES ?";
+
+            db.query(milestoneQuery, [milestonePayload], (err, mResult) => {
+              if (err) {
+                console.log(err);
+                return res.sendStatus(500);
+              }
+              completedQuery++;
+              if (completedQuery === tasks.length) {
+                res.json({ message: "Data inserted successfully" });
+              }
+            });
+          },
+        );
+      });
     });
+  });
+});
+
+app.get("/fetchProjectList/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = "SELECT * FROM project WHERE user_id = ?";
+
+  db.query(sql, [id], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
+  });
+});
+
+app.get("/searchProject/:name", (req, res) => {
+  const { name } = req.params;
+
+  const sql = "SELECT * FROM project WHERE name LIKE ?";
+
+  db.query(sql, [`%${name}%`], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
   });
 });
 
