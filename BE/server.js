@@ -25,54 +25,67 @@ app.post("/register", async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   const dateCreated = new Date().toLocaleDateString("en-CA");
 
-  const sql =
-    "INSERT INTO user (name, password, date_created) VALUES (?, ?, ?)";
-  db.query(sql, [name, hashedPassword, dateCreated], (err, fields) => {
+  const nameQuery = "SELECT name FROM USER WHERE NAME = ?";
+
+  db.query(nameQuery, [name], (err, rows, fields) => {
     if (err) {
       console.log(err);
       return res.sendStatus(500);
     }
 
-    const sqlSelect = "SELECT * FROM user WHERE name = ?";
+    if (rows.length !== 0) {
+      return res.sendStatus(409);
+    }
 
-    db.query(sqlSelect, [name], (err, rows, fields) => {
+    const sql =
+      "INSERT INTO user (name, password, date_created) VALUES (?, ?, ?)";
+    db.query(sql, [name, hashedPassword, dateCreated], (err, fields) => {
       if (err) {
         console.log(err);
         return res.sendStatus(500);
       }
-      const refreshToken = jwt.sign(
-        {
-          id: rows[0].id,
-          name: name,
-          role: rows[0].role,
-        },
-        process.env.JWT_REFRESH_KEY,
-        { expiresIn: refreshTokenExpiry },
-      );
-      const accessToken = jwt.sign(
-        {
-          id: rows[0].id,
-          name: name,
-          role: rows[0].role,
-        },
-        process.env.JWT_ACCESS_KEY,
-        { expiresIn: accessTokenExpiry },
-      );
 
-      res.cookie("access_token", accessToken, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false,
+      const sqlSelect = "SELECT * FROM user WHERE name = ?";
+
+      db.query(sqlSelect, [name], (err, rows, fields) => {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        }
+        const refreshToken = jwt.sign(
+          {
+            id: rows[0].id,
+            name: name,
+            role: rows[0].role,
+          },
+          process.env.JWT_REFRESH_KEY,
+          { expiresIn: refreshTokenExpiry },
+        );
+        const accessToken = jwt.sign(
+          {
+            id: rows[0].id,
+            name: name,
+            role: rows[0].role,
+          },
+          process.env.JWT_ACCESS_KEY,
+          { expiresIn: accessTokenExpiry },
+        );
+
+        res.cookie("access_token", accessToken, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: false,
+        });
+
+        res.cookie("refresh_token", refreshToken, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: false,
+        });
+
+        const user = { id: rows[0].id, name: name, role: rows[0].role };
+        res.json(user);
       });
-
-      res.cookie("refresh_token", refreshToken, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false,
-      });
-
-      const user = { id: rows[0].id, name: name, role: rows[0].role };
-      res.json(user);
     });
   });
 });

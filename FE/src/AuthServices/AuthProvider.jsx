@@ -19,11 +19,14 @@ export default function AuthProvider({ children }) {
         body: JSON.stringify(payload),
         credentials: "include",
       });
+      if (res.status === 409) return res;
       if (!res.ok) throw new Error("Couldn't fetch responses");
       const data = await res.json();
       setUser({ id: data.id, name: data.name, role: data.role });
+      return true;
     } catch (err) {
       console.log(err);
+      return false;
     }
   }
 

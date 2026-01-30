@@ -11,12 +11,24 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [notMatch, setNotMatch] = useState(false);
+  const [nameTaken, setNameTaken] = useState(false);
+  const [emptyName, setEmptyName] = useState(false);
+  const [emptyPassword, setEmptyPassowrd] = useState(false);
 
   const { registerUser, user } = useContext(AuthContext);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   function verification() {
+    if (name === "") {
+      setEmptyName(true);
+      return;
+    }
+    if (password === "") {
+      setEmptyPassowrd(true);
+      return;
+    }
+
     if (password !== confirmPassword) {
       console.log(password, confirmPassword);
       setNotMatch(true);
@@ -27,17 +39,24 @@ export default function Register() {
     return true;
   }
 
-  function handleRegister() {
+  async function handleRegister() {
+    setNameTaken(false);
     if (!verification()) return;
-    registerUser({
+    const res = await registerUser({
       name: name,
       password: password,
     });
-    navigate("/")
+
+    if (res.status === 409) {
+      setNameTaken(true);
+      return;
+    }
+
+    navigate("/");
   }
 
-  if(user){
-    navigate("/")
+  if (user) {
+    navigate("/");
   }
 
   return (
@@ -56,6 +75,14 @@ export default function Register() {
               placeholder="username..."
               required
             />
+            {emptyName && (
+              <h3 className={styles.alertMessage}>username can't be empty</h3>
+            )}
+            {nameTaken && (
+              <h3 className={styles.alertMessage}>
+                username was already taken
+              </h3>
+            )}
             <input
               type="password"
               value={password}
@@ -64,6 +91,9 @@ export default function Register() {
               placeholder="password..."
               required
             />
+            {emptyPassword && (
+              <h3 className={styles.alertMessage}>password can't be empty</h3>
+            )}
             <input
               type="password"
               value={confirmPassword}
