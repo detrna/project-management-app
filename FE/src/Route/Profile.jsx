@@ -18,6 +18,7 @@ export default function Profile() {
   const [isFollowed, setIsFollowed] = useState(false);
   const [follower, setFollower] = useState(0);
   const [projects, setProjects] = useState(null);
+  const [displayedProjects, setDisplayedProjects] = useState(null);
 
   async function fetchFollowerProfile() {
     try {
@@ -46,6 +47,7 @@ export default function Profile() {
 
       const project = await fetchProjectList();
       setProjects(project);
+      setDisplayedProjects(project);
     },
     [],
   );
@@ -109,6 +111,19 @@ export default function Profile() {
     }
   }
 
+  function filterProject(event) {
+    if (event.target.value === "") {
+      setDisplayedProjects(projects);
+      return;
+    }
+    const projectFiltered = projects.filter((project) => {
+      return project.name
+        .toLowerCase()
+        .includes(event.target.value.toLowerCase());
+    });
+    setDisplayedProjects(projectFiltered);
+  }
+
   const FollowButton = () => {
     if (isOwner || !user) return null;
 
@@ -119,7 +134,7 @@ export default function Profile() {
     );
   };
 
-  if (!profile || !projects) return <></>;
+  if (!profile || !projects || !displayedProjects) return <></>;
 
   return (
     <>
@@ -152,7 +167,7 @@ export default function Profile() {
               <input
                 id={styles.input}
                 placeholder="search here..."
-                onChange={(e) => searchProject(e)}
+                onChange={(e) => filterProject(e)}
               ></input>
             </div>
             {isOwner && (
@@ -163,9 +178,8 @@ export default function Profile() {
               </div>
             )}
           </div>
-
           <div className={styles.projectList}>
-            {projects.map((p) => (
+            {displayedProjects.map((p) => (
               <ProjectCard
                 key={p.id}
                 projectName={p.name}

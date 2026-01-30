@@ -301,10 +301,26 @@ app.post("/submitProject", authenticate, (req, res) => {
   });
 });
 
-app.get("/fetchProjectList/:id", (req, res) => {
-  const { id } = req.params;
+app.get("/fetchProjectList/:userid", (req, res) => {
+  const { userid } = req.params;
 
   const sql = "SELECT * FROM project WHERE user_id = ?";
+
+  db.query(sql, [userid], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
+  });
+});
+
+app.get("/fetchProject/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql =
+    "SELECT p.*, t.id AS tId, t.name AS tName, t.description AS tDescription, t.completed AS tCompleted, t.milestone_count AS tMilestoneCount, t.milestone_completed AS tMilestoneCompleted, m.id AS mId, m.name AS mName, m.description AS mDescription, m.completed AS mCompleted, m.task_id AS mTaskId FROM project p LEFT JOIN task t ON p.id = t.project_id LEFT JOIN milestone m ON t.id = m.task_id WHERE p.id = ?";
 
   db.query(sql, [id], (err, rows, fields) => {
     if (err) {
@@ -312,7 +328,53 @@ app.get("/fetchProjectList/:id", (req, res) => {
       return res.sendStatus(500);
     }
 
-    res.send(rows);
+    const tasks = rows.map((row) => row.tId);
+    let taskFilter = [];
+
+    const milestones = rows.map((row) => row.mTaskId);
+
+    for (let i = 0; i < tasks.length; i++) {
+      if (tasks[i] === tasks[i + 1]) continue;
+
+      taskFilter.push({
+        id: rows[i].tId,
+        name: rows[i].tName,
+        description: rows[i].tDescription,
+        completed: rows[i].tCompleted,
+        milestone_count: rows[i].tMilestoneCount,
+        milestone_completed: rows[i].tMilestoneCompleted,
+        milestone: [],
+      });
+    }
+
+    for (let i = 0; i < taskFilter.length; i++) {
+      for (let j = 0; j < milestones.length; j++) {
+        if (taskFilter[i].id === milestones[j]) {
+          taskFilter[i].milestone.push({
+            id: rows[i].mId,
+            name: rows[i].mName,
+            description: rows[i].mDescription,
+            completed: rows[i].mCompleted,
+            task_id: rows[i].mTaskId,
+          });
+        }
+      }
+    }
+
+    const project = {
+      id: rows[0].id,
+      name: rows[0].name,
+      description: rows[0].description,
+      date: rows[0].date,
+      task_count: rows[0].task_count,
+      task_completed: rows[0].task_completed,
+      status: rows[0].status,
+      completion: rows[0].completion,
+      user_id: rows[0].user_id,
+      tasks: taskFilter,
+    };
+
+    res.send(project);
   });
 });
 

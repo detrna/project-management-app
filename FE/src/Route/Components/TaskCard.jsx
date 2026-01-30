@@ -1,26 +1,20 @@
 import styles from "./TaskCard.module.css";
 
-export default function TaskCard() {
+export default function TaskCard({ milestones, taskName, taskCompletion }) {
   return (
     <div className={styles.container}>
       <div className={styles.nameContainer}>
         <icon id={styles.circle}></icon>
-        <p id={styles.textNama}>Rancang UI/UX</p>
-        <p id={styles.pecahan}>3/3</p>
+        <p id={styles.textNama}>{taskName}</p>
+        <p id={styles.pecahan}>{taskCompletion}</p>
       </div>
       <div className={styles.milestoneList}>
-        <div className={styles.milestoneContainer}>
-          <i id={styles.square}></i>
-          <p id={styles.textMilestone}>Rancang desain</p>
-        </div>
-        <div className={styles.milestoneContainer}>
-          <i id={styles.square}></i>
-          <p id={styles.textMilestone}>Rancang desain</p>
-        </div>
-        <div className={styles.milestoneContainer}>
-          <i id={styles.square}></i>
-          <p id={styles.textMilestone}>Rancang desain</p>
-        </div>
+        {milestones.map((milestone) => (
+          <div className={styles.milestoneContainer} key={milestone.id}>
+            <i id={styles.square}></i>
+            <p id={styles.textMilestone}>{milestone.name}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

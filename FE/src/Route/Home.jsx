@@ -5,6 +5,7 @@ import styles from "./Home.module.css";
 
 export default function Home() {
   const [users, setUsers] = useState(null);
+  const [searchedUsers, setSearchedUsers] = useState(null);
 
   async function fetchProfileHome() {
     try {
@@ -36,9 +37,50 @@ export default function Home() {
     }
   }
 
+  function searchUser(event) {
+    if (event.target.value === "") {
+      setSearchedUsers(null);
+      return;
+    }
+    const userFiltered = users.filter((user) => {
+      return user.name.toLowerCase().includes(event.target.value.toLowerCase());
+    });
+    setSearchedUsers(userFiltered);
+  }
+
   useEffect(() => {
     fetchProfileHome();
   }, []);
+
+  const Userlist = () => {
+    if (searchedUsers) {
+      return (
+        <div className={styles.userlist}>
+          {searchedUsers.map((u, index) => (
+            <ProfileCard
+              id={u.id}
+              username={u.name}
+              projectCount={u.projectCount}
+              key={index}
+            />
+          ))}
+        </div>
+      );
+    } else if (users) {
+      return (
+        <div className={styles.userlist}>
+          {users.map((u, index) => (
+            <ProfileCard
+              id={u.id}
+              username={u.name}
+              projectCount={u.projectCount}
+              key={index}
+            />
+          ))}
+        </div>
+      );
+    }
+  };
 
   return (
     <>
@@ -49,21 +91,10 @@ export default function Home() {
           <input
             placeholder="search here ..."
             id={styles.input}
-            onChange={searchProfile}
+            onChange={(e) => searchUser(e)}
           ></input>
         </div>
-        {users && (
-          <div className={styles.userlist}>
-            {users.map((u, index) => (
-              <ProfileCard
-                id={u.id}
-                username={u.name}
-                projectCount={u.projectCount}
-                key={index}
-              />
-            ))}
-          </div>
-        )}
+        <Userlist />
       </div>
     </>
   );

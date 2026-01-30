@@ -72,11 +72,11 @@
   font-weight: 300;
 }
 
-.projectList {
+.taskList {
   display: flex;
   gap: 30px;
   flex-wrap: wrap;
-  justify-content: center;
+  padding-left: 47.5px;
 }
 
 .link {
