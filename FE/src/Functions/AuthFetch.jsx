@@ -11,8 +11,6 @@ export async function authFetch(endpoint, method, payload) {
 
     if (res.status !== 403) return res;
 
-    console.log("WERE REFRESHING");
-
     const refresh = await fetch("http://localhost:3000/refresh", {
       method: "POST",
       credentials: "include",

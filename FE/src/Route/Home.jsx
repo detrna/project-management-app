@@ -20,6 +20,7 @@ export default function Home() {
     }
   }
 
+  /* Backend-fetch search
   async function searchProfile(e) {
     try {
       if (e.target.value === "") {
@@ -36,6 +37,7 @@ export default function Home() {
       console.log(err);
     }
   }
+  */
 
   function searchUser(event) {
     if (event.target.value === "") {
@@ -73,7 +75,7 @@ export default function Home() {
             <ProfileCard
               id={u.id}
               username={u.name}
-              projectCount={u.projectCount}
+              projectCount={u.project_count}
               key={index}
             />
           ))}

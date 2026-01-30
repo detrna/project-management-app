@@ -1,18 +1,36 @@
 import styles from "./TaskCard.module.css";
 
-export default function TaskCard({ milestones, taskName, taskCompletion }) {
+export default function TaskCard({
+  milestones,
+  taskName,
+  taskCompletion,
+  taskCompleted,
+  owner,
+  handleMilestoneButton,
+}) {
   return (
     <div className={styles.container}>
       <div className={styles.nameContainer}>
-        <icon id={styles.circle}></icon>
-        <p id={styles.textNama}>{taskName}</p>
-        <p id={styles.pecahan}>{taskCompletion}</p>
+        <div className={styles.nameCard}>
+          <i
+            className={taskCompleted ? styles.circleGreen : styles.circleRed}
+          ></i>
+          <p className={styles.textNama}>{taskName}</p>
+        </div>
+        <p className={styles.pecahan}>{taskCompletion}</p>
       </div>
       <div className={styles.milestoneList}>
-        {milestones.map((milestone) => (
-          <div className={styles.milestoneContainer} key={milestone.id}>
-            <i id={styles.square}></i>
-            <p id={styles.textMilestone}>{milestone.name}</p>
+        {milestones.map((milestone, mIndex) => (
+          <div className={styles.milestoneContainer} key={mIndex}>
+            <i
+              className={`
+                ${milestone.completed ? styles.squareGreen : styles.squareRed} ${owner ? styles.pointer : ""} 
+              `}
+              onClick={() =>
+                handleMilestoneButton(milestone.id, milestone.completed)
+              }
+            ></i>
+            <p className={styles.textMilestone}>{milestone.name}</p>
           </div>
         ))}
       </div>

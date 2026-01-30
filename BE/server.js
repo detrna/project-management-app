@@ -351,11 +351,11 @@ app.get("/fetchProject/:id", (req, res) => {
       for (let j = 0; j < milestones.length; j++) {
         if (taskFilter[i].id === milestones[j]) {
           taskFilter[i].milestone.push({
-            id: rows[i].mId,
-            name: rows[i].mName,
-            description: rows[i].mDescription,
-            completed: rows[i].mCompleted,
-            task_id: rows[i].mTaskId,
+            id: rows[j].mId,
+            name: rows[j].mName,
+            description: rows[j].mDescription,
+            completed: rows[j].mCompleted,
+            task_id: rows[j].mTaskId,
           });
         }
       }
@@ -390,6 +390,137 @@ app.get("/searchProject/:name", (req, res) => {
     }
 
     res.send(rows);
+  });
+});
+
+app.put("/checkMilestone/:task_id/:milestone_id", authenticate, (req, res) => {
+  const user = req.user;
+  const { task_id, milestone_id } = req.params;
+
+  const milestoneQuery = "UPDATE milestone SET completed = 1 WHERE id = ?";
+  const taskQuery =
+    "UPDATE task SET milestone_completed = milestone_completed + 1 WHERE id = ?";
+
+  db.query(milestoneQuery, [milestone_id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    db.query(taskQuery, [task_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+
+      res.send({ message: "Milestone checked successfully" });
+    });
+  });
+});
+
+app.put(
+  "/uncheckMilestone/:task_id/:milestone_id",
+  authenticate,
+  (req, res) => {
+    const user = req.user;
+    const { task_id, milestone_id } = req.params;
+
+    const milestoneQuery = "UPDATE milestone SET completed = 0 WHERE id = ?";
+    const taskQuery =
+      "UPDATE task SET milestone_completed = milestone_completed - 1 WHERE id = ?";
+
+    db.query(milestoneQuery, [milestone_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+
+      db.query(taskQuery, [task_id], (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        }
+        res.send({ message: "Milestone unchecked successfully" });
+      });
+    });
+  },
+);
+
+app.put("/checkTask/:project_id/:task_id", authenticate, (req, res) => {
+  const user = req.user;
+  const { project_id, task_id } = req.params;
+
+  const sql = "UPDATE task SET completed = 1 WHERE id = ?";
+  const projectQuery =
+    "UPDATE project SET task_completed = task_completed + 1 WHERE id = ?";
+
+  db.query(sql, [task_id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    db.query(projectQuery, [project_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return sendStatus(500);
+      }
+      res.send({ message: "Task checked successfully" });
+    });
+  });
+});
+
+app.put("/uncheckTask/:project_id/:task_id", authenticate, (req, res) => {
+  const user = req.user;
+  const { project_id, task_id } = req.params;
+
+  const sql = "UPDATE task SET completed = 0 WHERE id = ?";
+  const projectQuery =
+    "UPDATE project SET task_completed = task_completed + - 1 WHERE id = ?";
+
+  db.query(sql, [task_id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+    db.query(projectQuery, [project_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return sendStatus(500);
+      }
+      res.send({ message: "Task checked successfully" });
+    });
+  });
+});
+
+app.put("/projectCompletion/:id/:completion", authenticate, (req, res) => {
+  const { id, completion } = req.params;
+
+  const sql = `UPDATE project SET completion = ? WHERE id = ?`;
+
+  db.query(sql, [completion, id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send({ message: "Project completion updated successfully" });
+  });
+});
+
+app.put("/updateCompletion/:id/", (req, res) => {
+  const { id } = req.params;
+  const { completion } = req.body;
+
+  const sql = "UPDATE project SET completion = ? WHERE ID = ?";
+
+  db.query(sql, [completion, id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send({ message: "Completion succesfully updated" });
   });
 });
 

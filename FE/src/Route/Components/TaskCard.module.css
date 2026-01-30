@@ -14,8 +14,13 @@
 
 .nameContainer {
   display: flex;
-  gap: 10px;
+  gap: 7.5px;
+}
+
+.nameCard {
+  display: flex;
   align-items: center;
+  gap: 7.5px;
 }
 
 .milestoneList {
@@ -31,25 +36,26 @@
   padding-left: 3px;
 }
 
-#textNama {
+.textNama {
   margin: 0;
   font-weight: 500;
   font-size: x-large;
 }
 
-#pecahan {
+.pecahan {
   font-weight: 200;
   font-size: medium;
   margin-top: 10px;
 }
 
-#textMilestone {
+.textMilestone {
   margin: 0;
   font-size: large;
   font-weight: 300;
 }
 
-#circle {
+.circleGreen {
+  margin: 0;
   width: 10px;
   height: 10px;
 
@@ -58,10 +64,33 @@
   background: #aeff70;
 }
 
-#square {
-  width: 4px;
-  height: 4px;
+.circleRed {
+  margin: 0;
+  width: 10px;
+  height: 10px;
 
-  border: 1px solid #fff;
+  border-radius: 21px;
+  border: 2px solid #fff;
+  background: #ff7070;
+}
+.squareGreen {
+  margin: 0;
+  width: 8px;
+  height: 8px;
+
+  border: 1.5px solid #fff;
   background: #aeff70;
+}
+
+.squareRed {
+  margin: 0;
+  width: 8px;
+  height: 8px;
+
+  border: 1.5px solid #fff;
+  background: transparent;
+}
+
+.pointer {
+  cursor: pointer;
 }
