@@ -15,6 +15,7 @@ export default function Project() {
   const [isOwner, setIsOwner] = useState(false);
   const [project, setProject] = useState(null);
   const [collaborators, setCollaborators] = useState(null);
+  const [isMember, setIsMember] = useState(false);
 
   async function fetchProject() {
     try {
@@ -45,10 +46,18 @@ export default function Project() {
   useEffect(() => {
     if (!user || !project) return;
     setIsOwner(detectOwner);
-  }, [project]);
+    setIsMember(detectMember);
+  }, [project, collaborators]);
 
   function detectOwner() {
     return project.user_id === user.id;
+  }
+
+  function detectMember() {
+    if (!collaborators) return;
+    const member = collaborators.find((c) => c.user_id === user.id);
+    if (member) return true;
+    return false;
   }
 
   async function handleMilestone(
@@ -57,7 +66,7 @@ export default function Project() {
     taskId,
     taskIndex,
   ) {
-    if (!isOwner) return;
+    if (!isOwner && !isMember) return;
 
     const isSuccess = milestoneCompleted
       ? await uncheckMilestone(milestoneId, taskId)
@@ -68,7 +77,7 @@ export default function Project() {
       const detect = await detectTaskCompletion(refreshProject, taskIndex);
       if (detect) {
         const newProject = await fetchProject();
-        console.log("TEST");
+
         const completionUpdate = await updateCompletion(newProject);
 
         setProject(completionUpdate);
@@ -194,9 +203,6 @@ export default function Project() {
       if (!res.ok)
         throw new Error("Couldn't get responses from updateCopletion");
       const data = await res.json();
-      console.log(data);
-
-      console.log(newProjectData);
 
       return newProjectData;
     } catch (err) {
@@ -274,7 +280,13 @@ export default function Project() {
             </div>
 
             <Link to={`/collaborator/${id}`} className={styles.link}>
-              <button className={styles.buttonCollaborator}>
+              <button
+                className={
+                  collaborators.length > 0
+                    ? `${styles.buttonCollaborator}`
+                    : `${styles.buttonCollaborator} ${styles.buttonMargin}`
+                }
+              >
                 Collaborator
               </button>
             </Link>
@@ -286,6 +298,7 @@ export default function Project() {
               <TaskCard
                 key={tIndex}
                 owner={isOwner}
+                member={isMember}
                 taskName={task.name}
                 taskCompletion={`${task.milestone_completed} / ${task.milestone_count}`}
                 taskCompleted={task.completed}

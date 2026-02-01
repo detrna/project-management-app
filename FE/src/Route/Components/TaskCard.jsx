@@ -6,6 +6,7 @@ export default function TaskCard({
   taskCompletion,
   taskCompleted,
   owner,
+  member,
   handleMilestoneButton,
 }) {
   return (
@@ -24,7 +25,7 @@ export default function TaskCard({
           <div className={styles.milestoneContainer} key={mIndex}>
             <i
               className={`
-                ${milestone.completed ? styles.squareGreen : styles.squareRed} ${owner ? styles.pointer : ""} 
+                ${milestone.completed ? styles.squareGreen : styles.squareRed} ${owner || member ? styles.pointer : ""} 
               `}
               onClick={() =>
                 handleMilestoneButton(milestone.id, milestone.completed)

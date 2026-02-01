@@ -111,7 +111,7 @@ app.post("/login", (req, res) => {
     const refreshToken = jwt.sign(
       {
         id: rows[0].id,
-        name: name,
+        name: rows[0].name,
         role: rows[0].role,
       },
       process.env.JWT_REFRESH_KEY,
@@ -120,7 +120,7 @@ app.post("/login", (req, res) => {
     const accessToken = jwt.sign(
       {
         id: rows[0].id,
-        name: name,
+        name: rows[0].name,
         role: rows[0].role,
       },
       process.env.JWT_ACCESS_KEY,
@@ -138,7 +138,7 @@ app.post("/login", (req, res) => {
       secure: false,
     });
 
-    const user = { id: rows[0].id, name: name, role: rows[0].role };
+    const user = { id: rows[0].id, name: rows[0].name, role: rows[0].role };
     res.json(user);
   });
 });
@@ -249,12 +249,13 @@ app.post("/submitProject", authenticate, (req, res) => {
   const user = req.user;
   const { name, tasks } = req.body;
 
-  const dateCreated = new Date().toLocaleDateString("en-CA");
-
   const projectQuery =
     "INSERT INTO project (name, task_count, user_id) VALUES (?, ?, ?)";
   const projectCountQuery =
-    "UPDATE user SET project_count = project_count WHERE id = ?";
+    "UPDATE user SET project_count = project_count + 1 WHERE id = ?";
+  const taskQuery =
+    "INSERT INTO task (name, milestone_count, project_id) VALUES (?, ?, ?)";
+  const milestoneQuery = "INSERT INTO milestone (name, task_id) VALUES ?";
 
   let completedQuery = 0;
 
@@ -272,9 +273,6 @@ app.post("/submitProject", authenticate, (req, res) => {
       const newProjectId = result.insertId;
 
       tasks.forEach((task) => {
-        const taskQuery =
-          "INSERT INTO task (name, milestone_count, project_id) VALUES (?, ?, ?)";
-
         db.query(
           taskQuery,
           [task.name, task.milestones.length, newProjectId],
@@ -290,9 +288,6 @@ app.post("/submitProject", authenticate, (req, res) => {
               milestone,
               newTaskId,
             ]);
-
-            const milestoneQuery =
-              "INSERT INTO milestone (name, task_id) VALUES ?";
 
             db.query(milestoneQuery, [milestonePayload], (err, mResult) => {
               if (err) {
@@ -317,6 +312,22 @@ app.get("/fetchProjectList/:userid", (req, res) => {
   const sql = "SELECT * FROM project WHERE user_id = ?";
 
   db.query(sql, [userid], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
+  });
+});
+
+app.get("/fetchGuestProjectList/:uid", (req, res) => {
+  const { uid } = req.params;
+
+  const sql =
+    "SELECT p.* FROM project p INNER JOIN collaboration c ON p.id = c.project_id WHERE c.user_id = ? AND c.role = ?";
+
+  db.query(sql, [uid, "Member"], (err, rows, fields) => {
     if (err) {
       console.log(err);
       return res.sendStatus(500);

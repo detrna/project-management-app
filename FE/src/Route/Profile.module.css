@@ -133,3 +133,11 @@
   text-decoration: none;
   display: inline-block;
 }
+
+.line {
+  border: none;
+  height: 1px;
+  background-color: #5a5a5a;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}

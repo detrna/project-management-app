@@ -42,9 +42,9 @@
 
 .collaboratorContainer {
   display: flex;
+  gap: 5px;
   flex-direction: column;
   justify-content: center;
-  gap: 5px;
 }
 
 .collaboratorImageContainer {
@@ -67,7 +67,6 @@
 
 .buttonCollaborator {
   margin: 0;
-  margin-top: 25px;
 
   font-size: large;
   font-weight: 300;
@@ -78,6 +77,10 @@
   padding-left: 10px;
   padding-right: 10px;
   cursor: pointer;
+}
+
+.buttonMargin {
+  margin-top: 35px;
 }
 
 .taskList {
@@ -98,7 +101,7 @@
 }
 
 .nameMenu {
-  position: fixed;
+  position: absolute;
   background-color: #171717;
   top: 60px;
   border-radius: 10px;

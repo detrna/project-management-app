@@ -19,6 +19,8 @@ export default function Profile() {
   const [follower, setFollower] = useState(0);
   const [projects, setProjects] = useState(null);
   const [displayedProjects, setDisplayedProjects] = useState(null);
+  const [guestProject, setGuestProject] = useState(null);
+  const [displayedGuestProject, setDisplayedGuestProjects] = useState(null);
 
   async function fetchFollowerProfile() {
     try {
@@ -48,6 +50,10 @@ export default function Profile() {
       const project = await fetchProjectList();
       setProjects(project);
       setDisplayedProjects(project);
+
+      const guestProject = await fetchGuestProjectList();
+      setGuestProject(guestProject);
+      setDisplayedGuestProjects(guestProject);
     },
     [],
   );
@@ -93,6 +99,20 @@ export default function Profile() {
     }
   }
 
+  async function fetchGuestProjectList() {
+    try {
+      const res = await fetch(
+        `http://localhost:3000/fetchGuestProjectList/${id}`,
+      );
+      if (!res.ok)
+        throw new Error("Couldn't fetch data from fetchGuestProject");
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async function searchProject(event) {
     if (event.target.value === "") {
       setProjects(await fetchProjectList());
@@ -122,6 +142,19 @@ export default function Profile() {
         .includes(event.target.value.toLowerCase());
     });
     setDisplayedProjects(projectFiltered);
+  }
+
+  function filterGuestProject(event) {
+    if (event.target.value === "") {
+      setDisplayedGuestProjects(guestProject);
+      return;
+    }
+    const projectFiltered = guestProject.filter((project) => {
+      return project.name
+        .toLowerCase()
+        .includes(event.target.value.toLowerCase());
+    });
+    setDisplayedGuestProjects(projectFiltered);
   }
 
   const FollowButton = () => {
@@ -163,12 +196,18 @@ export default function Profile() {
         <div className={styles.projectContainer}>
           <div className={styles.projectHeader}>
             <div className={styles.projectTitle}>
-              <h2 id={styles.textProject}>{profile.project_count} Projects</h2>
-              <input
-                id={styles.input}
-                placeholder="search here..."
-                onChange={(e) => filterProject(e)}
-              ></input>
+              <h2 id={styles.textProject}>
+                {profile.project_count === 0
+                  ? "Not started any project yet"
+                  : `${profile.project_count} Projects`}
+              </h2>
+              {profile.project_count > 0 && (
+                <input
+                  id={styles.input}
+                  placeholder="search here..."
+                  onChange={(e) => filterProject(e)}
+                ></input>
+              )}
             </div>
             {isOwner && (
               <div className={styles.newProjectContainer}>
@@ -178,6 +217,7 @@ export default function Profile() {
               </div>
             )}
           </div>
+
           <div className={styles.projectList}>
             {displayedProjects.map((p) => (
               <ProjectCard
@@ -189,6 +229,32 @@ export default function Profile() {
               ></ProjectCard>
             ))}
           </div>
+          {(guestProject?.length > 0 && (
+            <>
+              <i className={styles.line}></i>
+              <div className={styles.projectTitle}>
+                <h2 id={styles.textProject}>
+                  {guestProject.length} Guest Projects
+                </h2>
+                <input
+                  id={styles.input}
+                  placeholder="search here..."
+                  onChange={(e) => filterGuestProject(e)}
+                ></input>
+              </div>
+              <div className={styles.projectList}>
+                {displayedGuestProject.map((p) => (
+                  <ProjectCard
+                    key={p.id}
+                    projectName={p.name}
+                    projectLink={`/project/${p.id}`}
+                    projectStatus={p.status}
+                    projectCompletion={p.completion}
+                  ></ProjectCard>
+                ))}
+              </div>
+            </>
+          )) || <></>}
         </div>
       </div>
     </>
