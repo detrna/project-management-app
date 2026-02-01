@@ -49,3 +49,46 @@
   font-weight: 500;
   font-size: larger;
 }
+
+.input {
+  margin: 0;
+  background-color: #181818;
+  border: transparent;
+  padding: 5px 10px 5px 10px;
+  border-radius: 5px;
+  font-size: large;
+}
+
+.searchSection {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.inviteContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.addButton {
+  background-color: rgba(0, 0, 0, 0.25);
+  height: 5vh;
+  width: 10vw;
+  cursor: pointer;
+
+  font-weight: 400;
+  font-size: medium;
+}
+
+.textCollaboratorCount {
+  font-size: large;
+  margin: 0;
+}
+
+.searchFieldContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

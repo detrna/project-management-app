@@ -13,7 +13,7 @@
   justify-content: flex-end;
 }
 
-#button {
+.button {
   border-radius: 8px;
   background: rgba(98, 98, 98, 0.25);
   padding: 5px;
@@ -24,12 +24,12 @@
   cursor: pointer;
 }
 
-#icon {
+.icon {
   transform: scale(1.25);
   cursor: pointer;
 }
 
-#p {
+.p {
   font-weight: 400;
 }
 
@@ -38,6 +38,11 @@
 }
 
 .profileMenuContainer {
-  position:absolute;
-  right:0px;
+  position: absolute;
+  right: 0px;
+}
+
+.mailMenuContainer {
+  position: absolute;
+  right: 20px;
 }

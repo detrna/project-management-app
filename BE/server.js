@@ -166,9 +166,7 @@ app.get("/fetchProfile", authenticate, (req, res) => {
 });
 
 app.post("/refresh", (req, res) => {
-  console.log("refresh hit");
   const refreshToken = req.cookies.refresh_token;
-  console.log(refreshToken);
 
   if (!refreshToken) return res.sendStatus(401);
 
@@ -229,7 +227,6 @@ app.get("/searchProfile/:name", (req, res) => {
       console.log(err);
       return res.sendStatus(500);
     }
-    console.log(rows);
     res.send(rows);
   });
 });
@@ -650,6 +647,170 @@ app.get("/followerName/:id", (req, res) => {
   });
 });
 
+//Mail
+
+app.get("/mail", authenticate, (req, res) => {
+  const { id } = req.user;
+
+  const sql =
+    "SELECT m.*, u.name AS sender_name, u.pfp FROM mail m INNER JOIN user u ON u.id = m.sender_id WHERE user_id = ?";
+
+  db.query(sql, [id], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
+  });
+});
+
+app.delete("/acceptProject/:id", authenticate, (req, res) => {
+  const { id } = req.params;
+  const user = req.user;
+  const { mailContent } = req.body;
+
+  const mailQuery = "DELETE FROM mail WHERE id = ?";
+  const projectNameQuery = "SELECT id FROM project WHERE name = ?";
+  const collaborationQuery =
+    "INSERT INTO collaboration (project_id, user_id) VALUES (?, ?)";
+  const projectName = mailContent.split(" · ")[1];
+
+  db.query(mailQuery, [id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    db.query(projectNameQuery, [projectName], (err, rows, result) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+
+      const projectId = rows[0].id;
+      db.query(collaborationQuery, [projectId, user.id], (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        }
+
+        res.send({ message: "Project joined successfully" });
+      });
+    });
+  });
+});
+
+app.delete("/declineProject/:id", authenticate, (req, res) => {
+  const { id } = req.params;
+
+  const sql = "DELETE FROM mail WHERE id = ?";
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send({ message: "Project declined successfully" });
+  });
+});
+
+app.post("/invite/:project_id/:user_id", authenticate, (req, res) => {
+  const user = req.user;
+  const { project_id, user_id } = req.params;
+
+  const projectQuery = "SELECT name FROM project WHERE id = ?";
+  const mailQuery =
+    "INSERT INTO mail (user_id, sender_id, content) VALUES (?, ?, ?)";
+
+  db.query(projectQuery, [project_id], (err, rows, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    const projectName = rows[0].name;
+
+    db.query(
+      mailQuery,
+      [user_id, user.id, `Project invitation · ${projectName}`],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        }
+
+        res.send({ message: "Invitation sent successfully" });
+      },
+    );
+  });
+});
+
+app.get("/getInvitedUser/:id", authenticate, (req, res) => {
+  const user = req.user;
+  const { id } = req.params;
+
+  const projectNameQuery = "SELECT name FROM project WHERE ID = ?";
+  const mailQuery = "SELECT user_id FROM mail WHERE content LIKE ?";
+
+  db.query(projectNameQuery, [id], (err, rows, result) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    const projectName = rows[0].name;
+
+    db.query(mailQuery, [`%${projectName}%`], (err, rows, result) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+
+      const idRows = rows.map((u) => u.user_id);
+
+      res.send(idRows);
+    });
+  });
+});
+
+//collaborator
+
+app.get("/fetchCollaborator/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql =
+    "SELECT c.*, u.name FROM collaboration c INNER JOIN user u ON c.user_id = u.id WHERE c.project_id = ?";
+
+  db.query(sql, [id], (err, rows, fields) => {
+    if (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+
+    res.send(rows);
+  });
+});
+
+app.delete(
+  "/removeCollaborator/:project_id/:user_id",
+  authenticate,
+  (req, res) => {
+    const { project_id, user_id } = req.params;
+
+    const sql =
+      "DELETE FROM collaboration WHERE project_id = ? AND user_id = ?";
+    db.query(sql, [project_id, user_id], (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+      res.send({ message: "User removed successfully" });
+    });
+  },
+);
+
 function authenticate(req, res, next) {
   const accessToken = req.cookies.access_token;
 
@@ -663,7 +824,6 @@ function authenticate(req, res, next) {
     req.user = decoded;
     next();
   } catch (err) {
-    console.log(err);
     return res.sendStatus(403);
   }
 }

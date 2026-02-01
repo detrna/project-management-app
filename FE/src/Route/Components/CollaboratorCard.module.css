@@ -1,7 +1,17 @@
-#roleButton {
+.button {
   background-color: rgba(0, 0, 0, 0.25);
 
   cursor: pointer;
+
+  font-weight: 300;
+  font-size: medium;
+}
+
+.menuButton {
+  background-color: #282828;
+
+  cursor: pointer;
+  padding: 5px;
 
   font-weight: 300;
   font-size: medium;
@@ -31,4 +41,30 @@
 .link {
   text-decoration: none;
   display: inline;
+}
+
+.buttonContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menuIcon {
+  color: #5e5e5e;
+  cursor: pointer;
+}
+
+.menuContainer {
+  background-color: #181818;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.settingMenuContainer {
+  position: absolute;
+  right: 18vw;
+  margin-top: 0px;
 }

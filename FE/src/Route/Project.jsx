@@ -4,15 +4,17 @@ import TaskCard from "./Components/TaskCard";
 import imgAvatar from "./img/avatar.png";
 
 import { Link, useParams } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
 import { AuthContext } from "../AuthServices/AuthProvider";
 import { authFetch } from "../Functions/AuthFetch";
+import { fetchCollaborator } from "../Functions/fetchCollaborator";
 
 export default function Project() {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [isOwner, setIsOwner] = useState(false);
   const [project, setProject] = useState(null);
+  const [collaborators, setCollaborators] = useState(null);
 
   async function fetchProject() {
     try {
@@ -25,13 +27,20 @@ export default function Project() {
     }
   }
 
-  useEffect(
-    () => async () => {
+  useEffect(() => {
+    async function onLoad() {
       const refreshProject = await fetchProject();
       setProject(refreshProject);
-    },
-    [user],
-  );
+
+      const collaboratorsData = await fetchCollaborator(id);
+      const collaboratorsWithoutOwner = collaboratorsData.filter(
+        (c) => c.user_id !== refreshProject.user_id,
+      );
+      setCollaborators(collaboratorsWithoutOwner);
+    }
+
+    onLoad();
+  }, []);
 
   useEffect(() => {
     if (!user || !project) return;
@@ -195,6 +204,24 @@ export default function Project() {
     }
   }
 
+  function handleCollaboratorMouseEnter(collaboratorId) {
+    const collaboratorNameMenu = collaborators.map((c) => {
+      if (c.id === collaboratorId) return { ...c, menuActive: true };
+      return { ...c, menuActive: false };
+    });
+    setCollaborators(collaboratorNameMenu);
+  }
+
+  function handleCollaboratorMouseLeave(collaboratorId) {
+    const collaboratorNameMenu = collaborators.map((c) => {
+      if (c.id === collaboratorId) return { ...c, menuActive: false };
+      return { ...c, menuActive: false };
+    });
+    setCollaborators(collaboratorNameMenu);
+  }
+
+  if (!collaborators) return <></>;
+
   return (
     <>
       <Navbar name={"username"}></Navbar>
@@ -214,15 +241,42 @@ export default function Project() {
           </div>
           <div className={styles.collaboratorContainer}>
             <div className={styles.collaboratorImageContainer}>
-              <Link to={"/profile"}>
-                <img src={imgAvatar} id={styles.avatarCollaborator}></img>
-              </Link>
-              <Link to={"/profile"}>
-                <img src={imgAvatar} id={styles.avatarCollaborator}></img>
-              </Link>
+              {collaborators?.map((c) => {
+                return (
+                  <Fragment key={c.id}>
+                    <Link to={`/profile/${c.user_id}`}>
+                      <img
+                        src={imgAvatar}
+                        id={styles.avatarCollaborator}
+                        onMouseEnter={() => {
+                          handleCollaboratorMouseEnter(c.id);
+                        }}
+                        onMouseLeave={() => {
+                          handleCollaboratorMouseLeave(c.id);
+                        }}
+                      ></img>
+                      {c.menuActive ? (
+                        <div className={styles.nameMenu}>
+                          <p className={styles.textCollaboratorName}>
+                            {c.name}
+                          </p>
+                          <p className={styles.textCollaboratorRole}>
+                            {c.role}
+                          </p>
+                        </div>
+                      ) : (
+                        <></>
+                      )}
+                    </Link>
+                  </Fragment>
+                );
+              }) || <></>}
             </div>
-            <Link to={"/collaborators"} className={styles.link}>
-              <p id={styles.textCollaborator}>Collaborator</p>
+
+            <Link to={`/collaborator/${id}`} className={styles.link}>
+              <button className={styles.buttonCollaborator}>
+                Collaborator
+              </button>
             </Link>
           </div>
         </div>

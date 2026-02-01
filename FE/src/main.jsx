@@ -46,7 +46,7 @@ const router = createBrowserRouter([
     element: <Follower></Follower>,
   },
   {
-    path: "/collaborators",
+    path: "/collaborator/:id",
     element: <Collaborator></Collaborator>,
   },
 ]);

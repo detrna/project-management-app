@@ -1,7 +1,7 @@
-export async function authFetch(endpoint, method, payload) {
+export async function authFetch(endpoint, option, payload) {
   try {
     const res = await fetch(`http://localhost:3000${endpoint}`, {
-      method: method,
+      method: option ? option : "GET",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
@@ -21,7 +21,7 @@ export async function authFetch(endpoint, method, payload) {
     }
 
     return fetch(`http://localhost:3000${endpoint}`, {
-      method: method,
+      method: option ? option : "GET",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",

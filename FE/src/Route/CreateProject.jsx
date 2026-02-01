@@ -86,7 +86,7 @@ export default function CreateProject() {
     const emptyInput = detectEmptyInput();
     if (emptyInput) return;
     const submit = await submitProject();
-    if (submit) navigate("/project");
+    if (submit) navigate(`/profile/${user?.id}`);
   }
 
   async function submitProject() {
@@ -194,9 +194,6 @@ export default function CreateProject() {
             </button>
             <button className={styles.button} onClick={handleSubmit}>
               Submit
-            </button>
-            <button className={styles.button} onClick={log}>
-              Log
             </button>
           </div>
         </div>
