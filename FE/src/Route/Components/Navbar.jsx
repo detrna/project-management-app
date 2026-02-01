@@ -64,7 +64,6 @@ export default function Navbar() {
 
   async function fetchMail() {
     try {
-      console.log("Fetching Mail");
       const res = await authFetch(`/mail`);
       if (!res.ok) throw new Error("Couldn't get responses from mail");
       const data = await res.json();
@@ -110,6 +109,9 @@ export default function Navbar() {
               className={`${styles.icon} fa-solid fa-envelope`}
               onClick={handleMailButton}
             ></i>
+            {(mails?.length > 0 && (
+              <i className={styles.notificationDot}></i>
+            )) || <></>}
             <i
               onClick={handleIconButton}
               className={`${styles.icon} fa-solid fa-user`}

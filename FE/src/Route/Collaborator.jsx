@@ -102,7 +102,6 @@ export default function Collaborator() {
       if (!res.ok)
         throw new Error("Couldn't get responses from removeCollaborator");
       const data = await res.json();
-      console.log(data);
       return data;
     } catch (err) {
       console.log(err);
@@ -132,7 +131,6 @@ export default function Collaborator() {
   function setupOpenedMenu() {
     if (!collaborators) return;
     const menu = collaborators.map((c) => false);
-    console.log(menu);
     setOpenedMenu(menu);
   }
 
@@ -201,10 +199,10 @@ export default function Collaborator() {
           <div className={styles.header}>
             <h1 id={styles.textHeader}>Project Collaborators</h1>
             {/*
-             */}
             <button id={styles.backButton} onClick={log}>
               LOG
             </button>
+              */}
             <Link className={styles.link} to={`/project/${id}`}>
               <button id={styles.backButton}>Back</button>
             </Link>

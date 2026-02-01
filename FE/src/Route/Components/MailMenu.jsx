@@ -7,23 +7,23 @@ export default function MailMenu({ mail, updateMail }) {
     if (content.includes("project invitation"))
       declineProjectInvitation(mailId);
     updateMail();
+    updateMail();
   }
 
   function handleRightButton(content, mailId, mailContent) {
     if (content.includes("project invitation"))
       acceptProjectInvitation(mailId, mailContent);
     updateMail();
+    updateMail;
   }
 
   async function acceptProjectInvitation(mailId, mailContent) {
     try {
-      console.log(mailContent);
       const res = await authFetch(`/acceptProject/${mailId}`, "DELETE", {
         mailContent,
       });
       if (!res.ok) throw new Error("Couldn't get responses from acceptProject");
       const data = await res.json();
-      console.log(data);
       return data;
     } catch (err) {
       console.log(err);
@@ -34,14 +34,11 @@ export default function MailMenu({ mail, updateMail }) {
       const res = await authFetch(`/declineProject/${mailId}`, "DELETE");
       if (!res.ok) throw new Error("Couldn't get responses from acceptProject");
       const data = await res.json();
-      console.log(data);
       return data;
     } catch (err) {
       console.log(err);
     }
   }
-
-  console.log(mail);
 
   return (
     <div className={styles.container}>
