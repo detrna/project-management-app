@@ -16,6 +16,7 @@ export default function Project() {
   const [project, setProject] = useState(null);
   const [collaborators, setCollaborators] = useState(null);
   const [isMember, setIsMember] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
 
   async function fetchProject() {
     try {
@@ -226,12 +227,37 @@ export default function Project() {
     setCollaborators(collaboratorNameMenu);
   }
 
+  function handleShowMenu() {
+    setShowProjectMenu(showProjectMenu ? false : true);
+  }
+
+  const ProjectMenu = () => {
+    return (
+      showProjectMenu && (
+        <div className={styles.projectMenu}>
+          <Link to={`/edit/${id}`} className={styles.link}>
+            <p className={styles.menuText}>Edit</p>
+          </Link>
+        </div>
+      )
+    );
+  };
+
   if (!collaborators) return <></>;
 
   return (
     <>
       <Navbar name={"username"}></Navbar>
-      <div className={styles.container}>
+      <div className={`${styles.container} ${!isOwner && styles.paddingTop}`}>
+        {isOwner && (
+          <div className={styles.menuBarContainer}>
+            <i
+              className={`fa-solid fa-ellipsis-vertical ${styles.menuBar}`}
+              onClick={handleShowMenu}
+            ></i>
+            <ProjectMenu></ProjectMenu>
+          </div>
+        )}
         <div className={styles.header}>
           <div className={styles.userCard}>
             <Link to={`/profile/${project?.user_id}`}>

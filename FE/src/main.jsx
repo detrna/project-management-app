@@ -11,6 +11,7 @@ import CreateProject from "./Route/CreateProject";
 import Follower from "./Route/Follower";
 import Collaborator from "./Route/Collaborator";
 import AuthProvider from "./AuthServices/AuthProvider";
+import EditProject from "./Route/EditProject";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
   {
     path: "/collaborator/:id",
     element: <Collaborator></Collaborator>,
+  },
+  {
+    path: "/edit/:id",
+    element: <EditProject></EditProject>,
   },
 ]);
 

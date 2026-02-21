@@ -5,11 +5,13 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const app = express();
+const router = express.Router();
 const db = require("./db.js");
+const pool = require("./pool.js");
 
 dotenv.config();
 const accessTokenExpiry = "5m";
-const refreshTokenExpiry = "1h";
+const refreshTokenExpiry = "7d";
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
@@ -209,6 +211,7 @@ app.post("/refresh", (req, res) => {
   }
 });
 
+//Home page
 app.get("/fetchProfileHome", (req, res) => {
   const sql = "SELECT id, name, project_count FROM user";
 
@@ -245,6 +248,7 @@ app.get("/fetchProfile/:id", (req, res) => {
   });
 });
 
+//Project
 app.post("/submitProject", authenticate, (req, res) => {
   const user = req.user;
   const { name, tasks } = req.body;
@@ -514,22 +518,24 @@ app.put("/uncheckTask/:project_id/:task_id", authenticate, (req, res) => {
   });
 });
 
-app.put("/projectCompletion/:id/:completion", authenticate, (req, res) => {
-  const { id, completion } = req.params;
+app.put("/projects/:id/completion/", authenticate, async (req, res) => {
+  const { id } = req.params;
 
-  const sql = `UPDATE project SET completion = ? WHERE id = ?`;
+  const [project_milestone] = await pool.query(
+    "SELECT m.completed AS completed_milestone FROM project p INNER JOIN task t ON p.id = t.project_id INNER JOIN milestone m ON t.id = m.task_id WHERE p.id = ?",
+    [id],
+  );
 
-  db.query(sql, [completion, id], (err, result) => {
-    if (err) {
-      console.log(err);
-      return res.sendStatus(500);
-    }
+  const completed = project_milestone.filter((m) => m.completed_milestone);
+  const completion = Math.ceil(
+    (completed.length / project_milestone.length) * 100,
+  );
 
-    res.send({ message: "Project completion updated successfully" });
-  });
+  await pool.query("UPDATE project SET completion = ?", [completion]);
+  res.send({ message: "Project completion updated successfully" });
 });
 
-app.put("/updateCompletion/:id/", (req, res) => {
+app.put("/updateCompletion/:id/", authenticate, (req, res) => {
   const { id } = req.params;
   const { completion } = req.body;
 
@@ -545,6 +551,121 @@ app.put("/updateCompletion/:id/", (req, res) => {
   });
 });
 
+app.put("/projects/:id", authenticate, async (req, res) => {
+  const { project } = req.body;
+  const { id } = req.params;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    if (project.modifiedId.deletedMilestone.length !== 0) {
+      const milestoneDeleteIds = project.modifiedId.deletedMilestone;
+      const milestoneDeletePlaceholder = milestoneDeleteIds
+        .map(() => "?")
+        .join(",");
+
+      await connection.query(
+        `DELETE FROM milestone WHERE id IN (${milestoneDeletePlaceholder})`,
+        milestoneDeleteIds,
+      );
+    }
+
+    if (project.modifiedId.deletedTask.length !== 0) {
+      const taskDeleteIds = project.modifiedId.deletedTask;
+      const taskDeletePlaceHolder = taskDeleteIds.map(() => "?").join(",");
+      await connection.query(
+        `DELETE FROM task WHERE id IN (${taskDeletePlaceHolder})`,
+        taskDeleteIds,
+      );
+    }
+
+    if (project.modifiedId.editedMilestone.length !== 0) {
+      const milestoneUpdates = project.modifiedId.editedMilestone.map((m) => {
+        const value = project.tasks
+          .flatMap((t) => t.milestone)
+          .find((milestone) => milestone.id === m)?.name;
+        return { id: m, name: value };
+      });
+
+      const milestoneIds = milestoneUpdates.map((m) => m.id);
+      const caseParamsMilestone = milestoneUpdates.flatMap((m) => [
+        m.id,
+        m.name,
+      ]);
+      const caseStatementMilestone = milestoneUpdates
+        .map(() => `WHEN ? THEN ?`)
+        .join(" ");
+      const placeholderMilestone = milestoneUpdates.map(() => "?").join(",");
+
+      await connection.query(
+        `UPDATE milestone SET name = CASE id ${caseStatementMilestone} END WHERE id IN (${placeholderMilestone})`,
+        [...caseParamsMilestone, ...milestoneIds],
+      );
+    }
+
+    const taskIds = project.modifiedId.editedTask;
+    if (taskIds.length !== 0) {
+      const taskUpdates = taskIds.map((id) => {
+        const task = project.tasks.find((t) => t.id === id);
+        return { id, name: task?.name };
+      });
+
+      const caseParamsMilestone = taskUpdates.flatMap((t) => [t.id, t.name]);
+      const caseStatementTask = taskIds.map(() => `WHEN ? THEN ?`).join(" ");
+      const placeholdersTask = taskIds.map(() => "?").join(",");
+
+      await connection.query(
+        `UPDATE task SET name = CASE id ${caseStatementTask} END WHERE id IN (${placeholdersTask})`,
+        [...caseParamsMilestone, ...taskIds],
+      );
+    }
+
+    const newTasks = project.tasks
+      .filter((t) => t.new)
+      .map((t) => {
+        return [t.name, t.milestone.length, parseInt(id)];
+      });
+
+    let insertedTaskId = [];
+    if (newTasks.length !== 0) {
+      const [taskResult] = await connection.query(
+        `INSERT INTO task (name, milestone_count, project_id) VALUES ?`,
+        [newTasks],
+      );
+      insertedTaskId = newTasks.map((_, i) => taskResult.insertId + i);
+    }
+    const oldTaskId = project.tasks.filter((t) => !t.new).map((t) => t.id);
+    const newTaskId =
+      insertedTaskId.length === 0
+        ? oldTaskId
+        : [...oldTaskId, ...insertedTaskId];
+    const newMilestone = project.tasks.flatMap((t, i) =>
+      t.milestone
+        .filter((m) => m.new)
+        .map((m) => {
+          return [m.name, newTaskId[i]];
+        }),
+    );
+
+    if (newMilestone.length !== 0) {
+      await connection.query("INSERT INTO milestone (name, task_id) VALUES ?", [
+        newMilestone,
+      ]);
+    }
+
+    await connection.commit();
+
+    res.json({ message: "Successfully modified project" });
+  } catch (err) {
+    await connection.rollback();
+    console.log(err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    connection.release();
+  }
+});
+//Follow
 app.post("/follow/:id", authenticate, (req, res) => {
   const user = req.user;
   const { id } = req.params;
@@ -659,7 +780,6 @@ app.get("/followerName/:id", (req, res) => {
 });
 
 //Mail
-
 app.get("/mail", authenticate, (req, res) => {
   const { id } = req.user;
 
@@ -787,7 +907,6 @@ app.get("/getInvitedUser/:id", authenticate, (req, res) => {
 });
 
 //collaborator
-
 app.get("/fetchCollaborator/:id", (req, res) => {
   const { id } = req.params;
 
@@ -822,6 +941,7 @@ app.delete(
   },
 );
 
+//middleware
 function authenticate(req, res, next) {
   const accessToken = req.cookies.access_token;
 
@@ -840,9 +960,6 @@ function authenticate(req, res, next) {
 }
 
 app.delete("/log", (req, res) => {
-  const accessToken = req.cookies.access_token;
-  const refreshToken = req.cookies.access_token;
-
   res.clearCookie("access_token", accessToken, {
     httpOnly: true,
     sameSite: "lax",

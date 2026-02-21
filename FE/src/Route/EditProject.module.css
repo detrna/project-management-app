@@ -1,0 +1,101 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.formContainer {
+  padding: 25px;
+  border-radius: 5px;
+  margin-top: 5vh;
+  width: 40vw;
+  display: flex;
+  flex-direction: column;
+  background-color: #282828;
+  gap: 5vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#textHeader {
+  margin: 0;
+}
+
+#backButton {
+  background-color: rgba(0, 0, 0, 0.25);
+  width: 8vw;
+  cursor: pointer;
+
+  margin: auto;
+
+  font-weight: 500;
+  font-size: large;
+}
+
+.inputSection {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.input {
+  background-color: #414141;
+  border: transparent;
+  padding: 9px;
+  border-radius: 5px;
+  font-size: larger;
+  font-weight: lighter;
+  font-weight: 300;
+}
+
+.milestoneInput {
+  width: 33vw;
+
+  background-color: #414141;
+  border: transparent;
+  padding: 9px;
+  border-radius: 5px;
+  font-size: larger;
+  font-weight: lighter;
+  font-weight: 300;
+}
+
+.taskContainer {
+  display: flex;
+  align-items: center;
+}
+
+.button {
+  background-color: rgba(0, 0, 0, 0.25);
+  width: 16vw;
+  height: 6vh;
+  cursor: pointer;
+
+  font-weight: 500;
+  font-size: larger;
+}
+
+.milestoneContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deleteButton {
+  width: 4vw;
+  height: 6vh;
+  background-color: rgba(0, 0, 0, 0.25);
+  font-weight: 500;
+  font-size: larger;
+  cursor: pointer;
+}
+
+#addMilestone {
+  width: 13vw;
+  margin: auto;
+}
