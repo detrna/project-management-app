@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 12, 2026 at 10:41 AM
+-- Generation Time: Feb 08, 2026 at 04:45 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `collaboration` (
   `id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `role` varchar(50) NOT NULL
+  `role` varchar(50) NOT NULL DEFAULT 'Member'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -43,7 +43,22 @@ CREATE TABLE `collaboration` (
 CREATE TABLE `follower` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `follower_id` int(11) NOT NULL
+  `follower_id` int(11) NOT NULL,
+  `date` date NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mail`
+--
+
+CREATE TABLE `mail` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `content` varchar(250) NOT NULL,
+  `date` date NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -54,9 +69,9 @@ CREATE TABLE `follower` (
 
 CREATE TABLE `milestone` (
   `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `description` varchar(250) DEFAULT NULL,
-  `status` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(250) DEFAULT '',
+  `completed` tinyint(1) NOT NULL DEFAULT 0,
   `task_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -69,14 +84,12 @@ CREATE TABLE `milestone` (
 CREATE TABLE `project` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `description` varchar(250) DEFAULT NULL,
-  `date` date NOT NULL,
+  `description` varchar(250) NOT NULL DEFAULT '',
+  `date` date NOT NULL DEFAULT current_timestamp(),
   `task_count` int(11) NOT NULL,
-  `task_completed` int(11) NOT NULL,
-  `status` varchar(50) NOT NULL,
-  `completion` int(11) NOT NULL,
-  `milestone_count` int(11) NOT NULL,
-  `milestone_completed` int(11) NOT NULL,
+  `task_completed` int(11) NOT NULL DEFAULT 0,
+  `status` varchar(50) NOT NULL DEFAULT 'Work in Progress',
+  `completion` int(11) NOT NULL DEFAULT 0,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -100,11 +113,11 @@ CREATE TABLE `refresh_token` (
 
 CREATE TABLE `task` (
   `id` int(11) NOT NULL,
-  `name` int(11) NOT NULL,
-  `description` varchar(250) DEFAULT NULL,
-  `status` varchar(50) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` varchar(250) DEFAULT '',
+  `completed` tinyint(1) NOT NULL DEFAULT 0,
   `milestone_count` int(11) NOT NULL,
-  `milestone_completed` int(11) NOT NULL,
+  `milestone_completed` int(11) NOT NULL DEFAULT 0,
   `project_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -118,11 +131,12 @@ CREATE TABLE `user` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
   `password` varchar(250) NOT NULL,
-  `pfp` varchar(250) DEFAULT NULL,
-  `project_count` int(11) NOT NULL,
-  `follower_count` int(11) NOT NULL,
-  `following_count` int(11) NOT NULL,
-  `date_created` date NOT NULL
+  `pfp` varchar(250) DEFAULT 'avatar',
+  `project_count` int(11) NOT NULL DEFAULT 0,
+  `follower_count` int(11) NOT NULL DEFAULT 0,
+  `following_count` int(11) NOT NULL DEFAULT 0,
+  `date_created` date NOT NULL DEFAULT current_timestamp(),
+  `role` varchar(50) NOT NULL DEFAULT 'default'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -144,6 +158,14 @@ ALTER TABLE `follower`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_follower_uid_user` (`user_id`),
   ADD KEY `fk_follower_followerid_user` (`follower_id`);
+
+--
+-- Indexes for table `mail`
+--
+ALTER TABLE `mail`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_mail-user_uid` (`user_id`),
+  ADD KEY `fk_mail-user_sender-id` (`sender_id`);
 
 --
 -- Indexes for table `milestone`
@@ -196,6 +218,12 @@ ALTER TABLE `follower`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `mail`
+--
+ALTER TABLE `mail`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `milestone`
 --
 ALTER TABLE `milestone`
@@ -242,6 +270,13 @@ ALTER TABLE `collaboration`
 ALTER TABLE `follower`
   ADD CONSTRAINT `fk_follower_followerid_user` FOREIGN KEY (`follower_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_follower_uid_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `mail`
+--
+ALTER TABLE `mail`
+  ADD CONSTRAINT `fk_mail-user_sender-id` FOREIGN KEY (`sender_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_mail-user_uid` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `milestone`
