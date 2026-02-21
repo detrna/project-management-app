@@ -62,7 +62,7 @@ export default function Home() {
             <ProfileCard
               id={u.id}
               username={u.name}
-              projectCount={u.projectCount}
+              projectCount={u.project_count}
               key={index}
             />
           ))}
