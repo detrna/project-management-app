@@ -8,6 +8,7 @@ import { Fragment, useContext, useEffect, useState } from "react";
 import { AuthContext } from "../AuthServices/AuthProvider";
 import { authFetch } from "../Functions/AuthFetch";
 import { fetchCollaborator } from "../Functions/fetchCollaborator";
+import { fetchProject } from "../Functions/fetchProject";
 
 export default function Project() {
   const { user } = useContext(AuthContext);
@@ -18,20 +19,9 @@ export default function Project() {
   const [isMember, setIsMember] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
 
-  async function fetchProject() {
-    try {
-      const res = await fetch(`http://localhost:3000/fetchProject/${id}`);
-      if (!res.ok) throw new Error("Couldn't get responses from fetchProject");
-      const data = await res.json();
-      return data;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   useEffect(() => {
     async function onLoad() {
-      const refreshProject = await fetchProject();
+      const refreshProject = await fetchProject(id);
       setProject(refreshProject);
 
       const collaboratorsData = await fetchCollaborator(id);
@@ -73,11 +63,11 @@ export default function Project() {
       ? await uncheckMilestone(milestoneId, taskId)
       : await checkMilestone(milestoneId, taskId);
     if (isSuccess) {
-      const refreshProject = await fetchProject();
+      const refreshProject = await fetchProject(id);
       setProject(refreshProject);
       const detect = await detectTaskCompletion(refreshProject, taskIndex);
       if (detect) {
-        const newProject = await fetchProject();
+        const newProject = await fetchProject(id);
 
         const completionUpdate = await updateCompletion(newProject);
 
@@ -236,7 +226,10 @@ export default function Project() {
       showProjectMenu && (
         <div className={styles.projectMenu}>
           <Link to={`/edit/${id}`} className={styles.link}>
-            <p className={styles.menuText}>Edit</p>
+            <p className={styles.menuText}>Edit Project</p>
+          </Link>
+          <Link to={`/manage-role/${id}`} className={styles.link}>
+            <p className={styles.menuText}>Manage Role</p>
           </Link>
         </div>
       )

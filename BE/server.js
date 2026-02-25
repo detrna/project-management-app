@@ -7,11 +7,16 @@ const dotenv = require("dotenv");
 const app = express();
 const router = express.Router();
 const db = require("./db.js");
-const pool = require("./pool.js");
+const pool = require("./config/pool.js");
+const RoleSchema = require("./schema/Role.schema.js");
+const Role = require("./models/role.js");
+const { validate } = require("./middleware/validate.js");
+const PermissionSchema = require("./schema/Permission.schema.js");
+const Permission = require("./models/Permission.js");
 
 dotenv.config();
 const accessTokenExpiry = "5m";
-const refreshTokenExpiry = "7d";
+const refreshTokenExpiry = "30d";
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
@@ -329,9 +334,9 @@ app.get("/fetchGuestProjectList/:uid", (req, res) => {
   const { uid } = req.params;
 
   const sql =
-    "SELECT p.* FROM project p INNER JOIN collaboration c ON p.id = c.project_id WHERE c.user_id = ? AND c.role = ?";
+    "SELECT p.* FROM project p INNER JOIN collaboration c ON p.id = c.project_id INNER JOIN role r ON p.id = r.project_id WHERE c.user_id = ? AND r.name <> ?";
 
-  db.query(sql, [uid, "Member"], (err, rows, fields) => {
+  db.query(sql, [uid, "Owner"], (err, rows, fields) => {
     if (err) {
       console.log(err);
       return res.sendStatus(500);
@@ -347,60 +352,65 @@ app.get("/fetchProject/:id", (req, res) => {
   const sql =
     "SELECT p.*, t.id AS tId, t.name AS tName, t.description AS tDescription, t.completed AS tCompleted, t.milestone_count AS tMilestoneCount, t.milestone_completed AS tMilestoneCompleted, m.id AS mId, m.name AS mName, m.description AS mDescription, m.completed AS mCompleted, m.task_id AS mTaskId FROM project p LEFT JOIN task t ON p.id = t.project_id LEFT JOIN milestone m ON t.id = m.task_id WHERE p.id = ?";
 
-  db.query(sql, [id], (err, rows, fields) => {
-    if (err) {
-      console.log(err);
-      return res.sendStatus(500);
-    }
+  try {
+    db.query(sql, [id], (err, rows, fields) => {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
 
-    const tasks = rows.map((row) => row.tId);
-    let taskFilter = [];
+      const tasks = rows.map((row) => row.tId);
+      let taskFilter = [];
 
-    const milestones = rows.map((row) => row.mTaskId);
+      const milestones = rows.map((row) => row.mTaskId);
 
-    for (let i = 0; i < tasks.length; i++) {
-      if (tasks[i] === tasks[i + 1]) continue;
+      for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i] === tasks[i + 1]) continue;
 
-      taskFilter.push({
-        id: rows[i].tId,
-        name: rows[i].tName,
-        description: rows[i].tDescription,
-        completed: rows[i].tCompleted,
-        milestone_count: rows[i].tMilestoneCount,
-        milestone_completed: rows[i].tMilestoneCompleted,
-        milestone: [],
-      });
-    }
+        taskFilter.push({
+          id: rows[i].tId,
+          name: rows[i].tName,
+          description: rows[i].tDescription,
+          completed: rows[i].tCompleted,
+          milestone_count: rows[i].tMilestoneCount,
+          milestone_completed: rows[i].tMilestoneCompleted,
+          milestone: [],
+        });
+      }
 
-    for (let i = 0; i < taskFilter.length; i++) {
-      for (let j = 0; j < milestones.length; j++) {
-        if (taskFilter[i].id === milestones[j]) {
-          taskFilter[i].milestone.push({
-            id: rows[j].mId,
-            name: rows[j].mName,
-            description: rows[j].mDescription,
-            completed: rows[j].mCompleted,
-            task_id: rows[j].mTaskId,
-          });
+      for (let i = 0; i < taskFilter.length; i++) {
+        for (let j = 0; j < milestones.length; j++) {
+          if (taskFilter[i].id === milestones[j]) {
+            taskFilter[i].milestone.push({
+              id: rows[j].mId,
+              name: rows[j].mName,
+              description: rows[j].mDescription,
+              completed: rows[j].mCompleted,
+              task_id: rows[j].mTaskId,
+            });
+          }
         }
       }
-    }
 
-    const project = {
-      id: rows[0].id,
-      name: rows[0].name,
-      description: rows[0].description,
-      date: rows[0].date,
-      task_count: rows[0].task_count,
-      task_completed: rows[0].task_completed,
-      status: rows[0].status,
-      completion: rows[0].completion,
-      user_id: rows[0].user_id,
-      tasks: taskFilter,
-    };
+      const project = {
+        id: rows[0].id,
+        name: rows[0].name,
+        description: rows[0].description,
+        date: rows[0].date,
+        task_count: rows[0].task_count,
+        task_completed: rows[0].task_completed,
+        status: rows[0].status,
+        completion: rows[0].completion,
+        user_id: rows[0].user_id,
+        tasks: taskFilter,
+      };
 
-    res.send(project);
-  });
+      res.send(project);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 app.get("/searchProject/:name", (req, res) => {
@@ -940,6 +950,85 @@ app.delete(
     });
   },
 );
+
+//role
+app.post(
+  "/role/:projectId",
+  authenticate,
+  validate(RoleSchema.create),
+  validate(RoleSchema.params, "params"),
+  async (req, res) => {
+    const { roles } = req.body;
+    const { projectId } = req.params;
+
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const role = roles.map((role) => {
+        return [role.name, projectId];
+      });
+
+      const result = await Role.create(role, connection);
+      const roleIds = roles.map((_, i) => result.insertId + i);
+
+      const permissions = roles.flatMap((role, i) =>
+        role.permission.map((p) => {
+          return [roleIds[i], p.taskId];
+        }),
+      );
+
+      await Permission.create(permissions, connection);
+
+      await connection.commit();
+
+      return res.json({ message: "Role created successfully" });
+    } catch (err) {
+      await connection.rollback();
+      console.log(err);
+      return res.status(500).json({ message: err.message });
+    } finally {
+      connection.release();
+    }
+  },
+);
+
+app.get(
+  "/role/:projectId",
+  authenticate,
+  validate(RoleSchema.params, "params"),
+  async (req, res) => {
+    const { id } = req.params;
+    const [rows] = await Role.findByProjectId(id);
+    return res.json(rows || null);
+  },
+);
+
+app.get(
+  "/permission/:id",
+  validate(PermissionSchema.projectIdParams, "params"),
+  async (req, res) => {
+    const { id } = req.params;
+    const [rows] = await Permission.findByProjectId(id);
+
+    return res.send(rows);
+  },
+);
+
+app.post("/permission", validate(PermissionSchema.create), async (req, res) => {
+  const { roleId, taskId } = req.body;
+  const role = roleId.map((_, i) => {
+    return {
+      role_id: roleId[i],
+      task_id: taskId[i],
+    };
+  });
+
+  console.log(role);
+  return res.send({ message: "OK" });
+  await Permission.create(role);
+  return res.json({ message: "Permission created successfully" });
+});
 
 //middleware
 function authenticate(req, res, next) {

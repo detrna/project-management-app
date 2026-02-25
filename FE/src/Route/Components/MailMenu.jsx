@@ -14,7 +14,7 @@ export default function MailMenu({ mail, updateMail }) {
     if (content.includes("project invitation"))
       acceptProjectInvitation(mailId, mailContent);
     updateMail();
-    updateMail;
+    updateMail();
   }
 
   async function acceptProjectInvitation(mailId, mailContent) {

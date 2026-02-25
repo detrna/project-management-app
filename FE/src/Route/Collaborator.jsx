@@ -88,10 +88,12 @@ export default function Collaborator() {
   }
 
   async function handleRemoveUser(user_id) {
-    const remove = await removeCollaborator(user_id);
+    await removeCollaborator(user_id);
     const refreshCollaborator = await fetchCollaborator(id);
     setCollaborators(refreshCollaborator);
   }
+
+  async function handleSetRole(user_id) {}
 
   async function removeCollaborator(user_id) {
     try {
@@ -250,6 +252,7 @@ export default function Collaborator() {
                       handleMenuIcon={() => handleMenu(index)}
                       openingMenu={openedMenu[index]}
                       handleRemoveButton={() => handleRemoveUser(c.user_id)}
+                      handleSetRoleButton={() => handleSetRole(c.user_id)}
                       profileLink={`/profile/${c.user_id}`}
                       ownerAccount={c.user_id === ownerId}
                       memberAccount={detectMember(c.user_id, c.role)}

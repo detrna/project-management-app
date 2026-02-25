@@ -10,7 +10,7 @@ export default function CollaboratorCard({
   owner,
   collaborationMenu,
   handleMenuIcon,
-  handleMenuIconMember,
+  handleSetRoleButton,
   openingMenu,
   profileLink,
   ownerAccount,
@@ -21,7 +21,7 @@ export default function CollaboratorCard({
       <div className={styles.menuContainer}>
         {owner ? (
           <>
-            <button className={styles.menuButton} onClick={handleRemoveButton}>
+            <button className={styles.menuButton} onClick={handleSetRoleButton}>
               Set role
             </button>
             <button className={styles.menuButton} onClick={handleRemoveButton}>
