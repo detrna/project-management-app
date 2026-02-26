@@ -31,8 +31,10 @@ const RoleSchema = {
             }),
         }),
       )
+      .unique()
       .required()
       .messages({
+        "array.unique": "Duplicate role are not allowed",
         "array.base": "Roles must be provided as an array",
         "any.required": "The roles array is required",
       }),

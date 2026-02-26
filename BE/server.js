@@ -332,16 +332,18 @@ app.get("/fetchProjectList/:userid", (req, res) => {
 
 app.get("/fetchGuestProjectList/:uid", (req, res) => {
   const { uid } = req.params;
+  console.log("TEST");
 
   const sql =
-    "SELECT p.* FROM project p INNER JOIN collaboration c ON p.id = c.project_id INNER JOIN role r ON p.id = r.project_id WHERE c.user_id = ? AND r.name <> ?";
+    "SELECT p.* FROM project p INNER JOIN collaboration c ON p.id = c.project_id WHERE c.user_id = ?";
 
-  db.query(sql, [uid, "Owner"], (err, rows, fields) => {
+  db.query(sql, [uid], (err, rows, fields) => {
     if (err) {
       console.log(err);
       return res.sendStatus(500);
     }
 
+    console.log(rows);
     res.send(rows);
   });
 });
@@ -961,6 +963,22 @@ app.post(
     const { roles } = req.body;
     const { projectId } = req.params;
 
+    const [currentRole] = await Role.getNameByProjectId(projectId);
+
+    if (currentRole[0]) {
+      const duplicateRole = roles.find((r) => {
+        return currentRole.some((cr) => {
+          return cr.name.trim().toLowerCase() === r.name.trim().toLowerCase();
+        });
+      });
+
+      if (duplicateRole)
+        return res.status(400).json({
+          success: false,
+          message: `The role "${duplicateRole.name}" is already exists`,
+        });
+    }
+
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -981,8 +999,7 @@ app.post(
       await Permission.create(permissions, connection);
 
       await connection.commit();
-
-      return res.json({ message: "Role created successfully" });
+      return res.json({ success: true, message: "Role created successfully" });
     } catch (err) {
       await connection.rollback();
       console.log(err);
@@ -998,9 +1015,33 @@ app.get(
   authenticate,
   validate(RoleSchema.params, "params"),
   async (req, res) => {
-    const { id } = req.params;
-    const [rows] = await Role.findByProjectId(id);
-    return res.json(rows || null);
+    const { projectId } = req.params;
+    const [rows] = await Role.findByProjectId(projectId);
+    if (!rows[0]) return res.json(null);
+
+    let rolesMap = new Map();
+    for (const row of rows) {
+      if (!rolesMap.has(row.id)) {
+        rolesMap.set(row.id, {
+          id: row.id,
+          name: row.name,
+          projectId: row.project_id,
+          permission: [],
+        });
+      }
+
+      const currentRole = rolesMap.get(row.id);
+
+      currentRole.permission.push({
+        roleId: row.id,
+        taskId: row.permission_task_id,
+        name: row.permission_name,
+      });
+    }
+
+    const payload = Array.from(rolesMap.values());
+
+    return res.json(rows[0] ? payload : null);
   },
 );
 

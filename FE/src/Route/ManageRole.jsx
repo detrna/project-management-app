@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Navbar from "./Components/Navbar";
 import styles from "./ManageRole.module.css";
 import { useContext, useState } from "react";
@@ -15,28 +15,29 @@ export default function ManageRole() {
   const [project, setProject] = useState(null);
   const [addMenu, setAddMenu] = useState(false);
   const [roleInput, setRoleInput] = useState(null);
-  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState(false);
+
+  const onLoad = async () => {
+    const currentProject = await fetchProject(id);
+    if (currentProject) setProject(currentProject);
+    const getRole = await fetchRole();
+    if (getRole) setRoles(getRole);
+    if (currentProject)
+      setRoleInput([
+        {
+          name: "",
+          permission: [
+            {
+              name: currentProject.tasks[0].name,
+              taskId: currentProject.tasks[0].id,
+            },
+          ],
+        },
+      ]);
+    setErrorMessage(null);
+  };
 
   useEffect(() => {
-    async function onLoad() {
-      const currentProject = await fetchProject(id);
-      if (currentProject) setProject(currentProject);
-      const getRole = await fetchRole();
-      if (getRole) setRoles(getRole);
-      if (currentProject)
-        setRoleInput([
-          {
-            name: "",
-            permission: [
-              {
-                name: currentProject.tasks[0].name,
-                taskId: currentProject.tasks[0].id,
-              },
-            ],
-          },
-        ]);
-    }
-
     onLoad();
   }, []);
 
@@ -48,8 +49,9 @@ export default function ManageRole() {
       console.log(data);
       return data;
     } catch (err) {
-      console.log(err);
-      return false;
+      const data = await res.json();
+      console.log(data);
+      return data;
     }
   }
 
@@ -139,6 +141,20 @@ export default function ManageRole() {
   }
 
   async function handleSubmit() {
+    const response = await createRole();
+    console.log(response);
+    if (response.success) {
+      const refreshedRoles = await fetchRole();
+      setRoles(refreshedRoles);
+      handleMenu();
+      onLoad();
+    } else {
+      setErrorMessage(response.message);
+      console.log(response.message);
+    }
+  }
+
+  async function createRole() {
     try {
       const roles = roleInput;
       const projectId = id;
@@ -146,19 +162,18 @@ export default function ManageRole() {
       const res = await authFetch(`/role/${projectId}`, "POST", {
         roles,
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message);
-      }
       const data = await res.json();
-      console.log(data);
+
+      if (!res.ok) throw data;
       return data;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
+      return err;
     }
   }
 
   const ViewRole = () => {
+    console.log(roles);
     return (
       <div>
         <div className={styles.listSectionHeader}>
@@ -169,20 +184,25 @@ export default function ManageRole() {
             Add Role
           </button>
         </div>
-        {roles.map((r, i) => {
-          return (
-            <div key={i}>
-              <p>{r.name}</p>
-              {r.permission.map((p, j) => {
-                return (
-                  <div key={j}>
-                    <p>{p}</p>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+        <div className={styles.roleListContainer}>
+          {roles.map((r, i) => {
+            return (
+              <div key={i}>
+                <div className={styles.roleContainer}>
+                  <div className={styles.textRoleName}>{r.name}</div>
+                </div>
+                <p className={styles.permissionUl}>Permission: </p>
+                {r.permission.map((p, j) => {
+                  return (
+                    <div key={j}>
+                      <p className={styles.textPermissionName}>• {p.name}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -198,7 +218,7 @@ export default function ManageRole() {
         <div className={styles.formContainer}>
           <div className={styles.header}>
             <h1 id={styles.textHeader}>Manage Role</h1>
-            <button onClick={log}>LOG</button>
+            {/*<button onClick={log}>LOG</button>*/}
             {user && (
               <Link to={`/project/${id}`}>
                 <button id={styles.backButton}>Back</button>
@@ -207,7 +227,12 @@ export default function ManageRole() {
           </div>
           {addMenu ? (
             <div className={styles.inputSection}>
-              <h2>Add Role</h2>
+              <div className={styles.inputSectionHeader}>
+                <h2>Add Role</h2>
+                <button className={styles.addRole} onClick={handleMenu}>
+                  View Roles
+                </button>
+              </div>
               {roleInput.map((r, i) => (
                 <Fragment key={i}>
                   <div className={styles.taskContainer}>
@@ -268,6 +293,7 @@ export default function ManageRole() {
               <button className={styles.button} onClick={handleSubmit}>
                 Submit
               </button>
+              {errorMessage && <div>{errorMessage}</div>}
             </div>
           ) : (
             <ViewRole></ViewRole>

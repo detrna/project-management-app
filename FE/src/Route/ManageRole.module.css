@@ -108,6 +108,12 @@
   align-items: center;
 }
 
+.inputSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .addRole {
   margin: 0;
   height: 6vh;
@@ -120,7 +126,8 @@
 }
 
 .roleListText {
-  font-size: large;
+  font-size: x-large;
+  font-weight: 600;
   margin: 0;
 }
 
@@ -142,4 +149,44 @@
   background-color: #282828;
   border-style: none;
   outline: none;
+}
+
+.roleListContainer {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  gap: 30px;
+}
+
+.roleContainer {
+  display: flex;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+  width: fit-content;
+}
+
+.textRoleName {
+  font-weight: 600;
+  font-size: larger;
+  margin: 0;
+}
+
+.permissionUl {
+  margin-left: 10px;
+  margin-bottom: 5px;
+  margin-top: 10px;
+
+  font-size: large;
+  font-weight: 500;
+}
+
+.textPermissionName {
+  margin: 0;
+  margin-left: 10px;
+  font-size: medium;
+  font-weight: 400;
 }
